@@ -4,6 +4,8 @@
     <property name="service.name" value="rm"/>
     <property name="service.host" value="localhost"/>
     <property name="service.port" value="8080"/>
+    <property name="service.middleware.name" value="middleware"/>
+    <property name="service.middleware.port" value="8081"/>
 
     <path id="jaxws.classpath">
         <pathelement location="${java.home}/../lib/tools.jar"/>
@@ -82,13 +84,52 @@
             <arg value="${basedir}/webapps"/>
         </java>
     </target>
+    
+    <target name="create-war-middleware">
+        <war 
+            warfile="${basedir}/build/war/middleware.war" 
+            webxml="etc/web.xml">
+            <webinf dir="${basedir}/etc" includes="sun-jaxws-middleware.xml"/>
+            <zipfileset
+                    dir="${basedir}/etc"
+                    includes="*.wsdl, *.xsd"
+                    prefix="WEB-INF/wsdl"/>
+            <classes dir="${basedir}/build/classes"/>
+        </war>
+    </target>
+    
+    <target name="deploy-war-middleware">
+        <delete dir="${basedir}/webapps/middleware" 
+            includeEmptyDirs="true"/>
+        <mkdir dir="${basedir}/webapps/middleware"/>        
+        <unzip 
+            src="${basedir}/build/war/middleware.war"
+            dest="${basedir}/webapps/middleware"/>
+    </target>
+    
+    <target name="start-tomcat-middleware">
+        <echo message="Starting Tomcat and deploying service ... "/>
+        <java fork="true" classname="server.ws.Main">
+            <classpath>
+                <path refid="jaxws.classpath"/>
+                <pathelement location="${basedir}/build/classes"/>
+            </classpath>
+            <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
+            <arg value="middleware"/>
+            <arg value="${service.middleware.port}"/>
+            <arg value="${basedir}/webapps"/>
+        </java>
+    </target>
 
     <target name="server" depends="setup">
         <antcall target="clean"/>
         <antcall target="build-server"/>
         <antcall target="create-war"/>
         <antcall target="deploy-war"/>
-        <antcall target="start-tomcat"/>        
+        <antcall target="start-tomcat"/>
+        <antcall target="create-war-middleware" />
+        <antcall target="deploy-war-middleware" />
+        <antcall target="start-tomcat-middleware"/>
     </target>
 
     <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
@@ -101,7 +142,7 @@
                 keep="true"
                 destdir="${basedir}/build/classes"
                 package="client"
-                wsdl="http://${service.host}:${service.port}/${service.name}/service?wsdl">
+                wsdl="http://${service.host}:${service.middleware.port}/${service.middleware.name}/service?wsdl">
         </wsimport>
     </target>
 
@@ -121,9 +162,9 @@
                 <path refid="jaxws.classpath"/>
                 <pathelement location="${basedir}/build/classes"/>
             </classpath>
-            <arg value="${service.name}"/>
+            <arg value="${service.middleware.name}"/>
             <arg value="${service.host}"/>
-            <arg value="${service.port}"/>
+            <arg value="${service.middleware.port}"/>
         </java>
     </target>
 
