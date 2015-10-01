@@ -1,4 +1,4 @@
-package server.mw;
+package server;
 
 //-------------------------------
 //Adapted from  
@@ -7,26 +7,16 @@ package server.mw;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Enumeration;
+import java.util.Vector;
 
 import javax.jws.WebService;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import com.sun.tools.ws.wsdl.framework.WSDLLocation;
-
-import server.Car;
-import server.Customer;
-import server.Flight;
-import server.RMHashtable;
-import server.RMItem;
-import server.ReservableItem;
-import server.ReservedItem;
-import server.Room;
-import server.Trace;
 import server.ws.ResourceManager;
-import server.ResourceManagerImplService;
 
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
@@ -34,7 +24,6 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManager proxyFlight;
 	ResourceManager proxyCar;
 	ResourceManager proxyRoom;
-	ResourceManagerImplService service;
 	
 public MiddlewareImpl() {
 	Trace.info("!!!!! MW about to create flight proxy");
@@ -50,8 +39,6 @@ public MiddlewareImpl() {
         Trace.info("!!!! Flight port:" + flightServicePort);
         wsdlLocation = new URL("http", flightServiceHost, flightServicePort, 
                 "/" + "rm" + "/service?wsdl");
-        service = new ResourceManagerImplService(wsdlLocation);
-        proxyFlight = service.getResourceManagerImplPort();
         
 	} catch (NamingException e) {
 		Trace.info("ERROR!!! CANNOT GRAB RM INFO FROM WEB.XML");

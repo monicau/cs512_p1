@@ -11,14 +11,6 @@
 	<property name="service.rm.host" value="localhost"/>
     <property name="service.rm.port" value="8088"/>
     <property name="service.rm.url_pattern" value="rm"/>
-    
-    <property name="service.rm2.name" value="rm2"/>
-	<property name="service.rm2.host" value="localhost"/>
-    <property name="service.rm2.port" value="8089"/>
-    
-    <property name="service.rm3.name" value="rm3"/>
-	<property name="service.rm3.host" value="localhost"/>
-    <property name="service.rm3.port" value="8090"/>
 	
     <path id="jaxws.classpath">
         <pathelement location="${java.home}/../lib/tools.jar"/>
@@ -62,30 +54,11 @@
         </annotationProcessing>
     </target>
     
-    <target name="build-server-rm" depends="setup">
-        <annotationProcessing
-                fork="true"
-                debug="true"
-                verbose="${verbose}"
-                destdir="${basedir}/build/classes"
-                srcdir="${basedir}/src"
-                includes="server/**"
-                excludes="server/mw/**"
-                sourceDestDir="${basedir}/build/classes"
-                procOnly="false"
-                sourcepath="${basedir}/src">
-            <classpath>
-                <path refid="jaxws.classpath"/>
-                <pathelement location="${basedir}/src"/>
-            </classpath>
-        </annotationProcessing>
-    </target>
-    
     <target name="create-war">
         <war 
             warfile="${basedir}/build/war/${service.name}.war" 
             webxml="etc/web.xml">
-            <webinf dir="${basedir}/etc/mw" includes="sun-jaxws.xml"/>
+            <webinf dir="${basedir}/etc" includes="sun-jaxws.xml"/>
             <zipfileset
                     dir="${basedir}/etc"
                     includes="*.wsdl, *.xsd"
@@ -115,16 +88,6 @@
             <arg value="${service.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
-    </target>
-    
-    <target name="import-rm">
-        <wsimport
-                quiet="true"
-                keep="true"
-                destdir="${basedir}/build/classes"
-                package="server"
-                wsdl="http://${service.rm.host}:${service.rm.port}/${service.rm.name}/${service.rm.url_pattern}?wsdl">
-        </wsimport>
     </target>
 
     <target name="create-war-rm">
@@ -163,20 +126,6 @@
         </java>
     </target>
     
-    <target name="start-tomcat-rm2">
-        <echo message="Starting Tomcat and deploying service ... "/>
-        <java fork="true" classname="server.ws.Main">
-            <classpath>
-                <path refid="jaxws.classpath"/>
-                <pathelement location="${basedir}/build/classes"/>
-            </classpath>
-            <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm.name}"/>
-            <arg value="${service.rm2.port}"/>
-            <arg value="${basedir}/webapps"/>
-        </java>
-    </target>
-    
     <target name="start-tomcat-rm3">
         <echo message="Starting Tomcat and deploying service ... "/>
         <java fork="true" classname="server.ws.Main">
@@ -192,8 +141,7 @@
     </target>
 	
     <target name="server">
-        <!-- <antcall target="clean"/>-->
-        <antcall target="import-rm" />
+        <antcall target="clean"/>
         <antcall target="build-server"/>
         <antcall target="create-war" />
         <antcall target="deploy-war" />
