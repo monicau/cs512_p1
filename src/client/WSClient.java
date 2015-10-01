@@ -3,6 +3,8 @@ package client;
 import java.net.URL;
 import java.net.MalformedURLException;
 
+import server.ws.ResourceManager;
+
 
 public class WSClient {
 

@@ -1,20 +1,65 @@
-/**
- * Just a copy of ResourceManagerImpl for now.
- */
-package server;
+package server.mw;
 
 //-------------------------------
 //Adapted from  
 //CSE 593
 //-------------------------------
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
+
 import javax.jws.WebService;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import com.sun.tools.ws.wsdl.framework.WSDLLocation;
+
+import server.Car;
+import server.Customer;
+import server.Flight;
+import server.RMHashtable;
+import server.RMItem;
+import server.ReservableItem;
+import server.ReservedItem;
+import server.Room;
+import server.Trace;
+import server.ws.ResourceManager;
+import server.ResourceManagerImplService;
 
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class MiddlewareImpl implements server.ws.ResourceManager {
- 
+	ResourceManager proxyFlight;
+	ResourceManager proxyCar;
+	ResourceManager proxyRoom;
+	ResourceManagerImplService service;
+	
+public MiddlewareImpl() {
+	Trace.info("!!!!! MW about to create flight proxy");
+	Context env;
+	String flightServiceHost;
+	Integer flightServicePort;
+	URL wsdlLocation;
+	try {
+		env = (Context) new InitialContext().lookup("java:comp/env");
+		flightServiceHost = (String) env.lookup("flight-service-host");
+		flightServicePort = (Integer) env.lookup("flight-service-port");
+        Trace.info("!!!! Flight host:" + flightServiceHost);
+        Trace.info("!!!! Flight port:" + flightServicePort);
+        wsdlLocation = new URL("http", flightServiceHost, flightServicePort, 
+                "/" + "rm" + "/service?wsdl");
+        service = new ResourceManagerImplService(wsdlLocation);
+        proxyFlight = service.getResourceManagerImplPort();
+        
+	} catch (NamingException e) {
+		Trace.info("ERROR!!! CANNOT GRAB RM INFO FROM WEB.XML");
+	} catch (MalformedURLException e) {
+		Trace.info("ERROR!! Malformed url.");
+	}
+	
+}
  protected RMHashtable m_itemHT = new RMHashtable();
  
  

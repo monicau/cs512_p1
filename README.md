@@ -5,11 +5,22 @@
 - Apache Ant
 
 ##Build and launch server
-```ant server -Dservice.port=8080```
+```ant server -Dservice.port=PORTNUMBER```
 
 ##Build and launch client
-```ant client -Dservice.host=YOURHOSTNAME -Dservice.port=8080```
+```ant client -Dservice.host=YOURHOSTNAME -Dservice.port=PORTNUMBER```
 
+##Servers
+###Middleware 
+```ant server```
+Access it via: http://localhost:8080/mw/service
+
+###Resource Managers
+```ant rm```
+```ant rm2```
+```ant rm3```
+With ports 8088, 8089, 8090
+Access via: http://localhost:80XX/rm/rm
 --
 
 Refer to README.txt for more information

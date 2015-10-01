@@ -9,11 +9,10 @@
   		ex.
   		http://host:port/{service-name}/{url-pattern}
   		{service-name} is defined in the Main.java? <- build.xml
-   -->
+   -->	
 
   <endpoint
-      name="ResourceManager"
-      implementation="server.ResourceManagerImpl"
-      url-pattern="/rm"/> 	
-
+      name="Middleware"
+      implementation="server.mw.MiddlewareImpl"
+      url-pattern="/service"/>
 </endpoints>

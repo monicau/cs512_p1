@@ -32,7 +32,9 @@ public class Main {
 
         tomcat.addWebapp("/" + serviceName, 
                 new File(deployDir + "/" + serviceName).getAbsolutePath());
-
+        
+        tomcat.enableNaming();
+        
         tomcat.start();
         tomcat.getServer().await();
     }
