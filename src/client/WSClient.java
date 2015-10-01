@@ -9,8 +9,8 @@ public class WSClient {
 //    ResourceManagerImplService service;
    	MiddlewareImplService service;
     
-//    ResourceManager proxy;
-   	Middleware proxy;
+    ResourceManager proxy;
+//   	Middleware proxy;
     
     public WSClient(String serviceName, String serviceHost, int servicePort) 
     throws MalformedURLException {

@@ -18,7 +18,6 @@ Inc.//DTD Web Application 2.3//EN"
         </servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>service</servlet-name>
         <url-pattern>/service</url-pattern>

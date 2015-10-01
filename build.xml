@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="help" name="project">
 
-    <property name="service.name" value="rm"/>
+    <!-- visit http://localhost:8080/mw/service to see available services -->
+	<property name="service.name" value="mw"/>
     <property name="service.host" value="localhost"/>
     <property name="service.port" value="8080"/>
-    <property name="service.middleware.name" value="middleware"/>
-    <property name="service.middleware.port" value="8081"/>
-
+    <property name="service.url_pattern" value="service"/> <!-- see sun-jaxws.xml-->
+	
+	<property name="service.rm.name" value="rm"/>
+	<property name="service.rm.host" value="localhost"/>
+    <property name="service.rm.port" value="8088"/>
+	
     <path id="jaxws.classpath">
         <pathelement location="${java.home}/../lib/tools.jar"/>
         <pathelement location="${java.home}/../jre/lib/rt.jar"/>
@@ -48,7 +52,7 @@
             </classpath>
         </annotationProcessing>
     </target>
-
+    
     <target name="create-war">
         <war 
             warfile="${basedir}/build/war/${service.name}.war" 
@@ -61,7 +65,7 @@
             <classes dir="${basedir}/build/classes"/>
         </war>
     </target>
-
+    
     <target name="deploy-war">
         <delete dir="${basedir}/webapps/${service.name}" 
             includeEmptyDirs="true"/>
@@ -84,12 +88,12 @@
             <arg value="${basedir}/webapps"/>
         </java>
     </target>
-    
-    <target name="create-war-middleware">
+
+    <target name="create-war-rm">
         <war 
-            warfile="${basedir}/build/war/middleware.war" 
+            warfile="${basedir}/build/war/${service.rm.name}.war" 
             webxml="etc/web.xml">
-            <webinf dir="${basedir}/etc" includes="sun-jaxws-middleware.xml"/>
+            <webinf dir="${basedir}/etc" includes="sun-jaxws.xml"/>
             <zipfileset
                     dir="${basedir}/etc"
                     includes="*.wsdl, *.xsd"
@@ -98,16 +102,16 @@
         </war>
     </target>
     
-    <target name="deploy-war-middleware">
-        <delete dir="${basedir}/webapps/middleware" 
+    <target name="deploy-war-rm">
+        <delete dir="${basedir}/webapps/${service.rm.name}" 
             includeEmptyDirs="true"/>
-        <mkdir dir="${basedir}/webapps/middleware"/>        
+        <mkdir dir="${basedir}/webapps/${service.rm.name}"/>        
         <unzip 
-            src="${basedir}/build/war/middleware.war"
-            dest="${basedir}/webapps/middleware"/>
+            src="${basedir}/build/war/${service.rm.name}.war"
+            dest="${basedir}/webapps/${service.rm.name}"/>
     </target>
     
-    <target name="start-tomcat-middleware">
+    <target name="start-tomcat-rm">
         <echo message="Starting Tomcat and deploying service ... "/>
         <java fork="true" classname="server.ws.Main">
             <classpath>
@@ -115,21 +119,22 @@
                 <pathelement location="${basedir}/build/classes"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="middleware"/>
-            <arg value="${service.middleware.port}"/>
+            <arg value="${service.rm.name}"/>
+            <arg value="${service.rm.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
     </target>
-
+	
+	
     <target name="server" depends="setup">
         <antcall target="clean"/>
         <antcall target="build-server"/>
-        <antcall target="create-war"/>
-        <antcall target="deploy-war"/>
+        <antcall target="create-war" />
+        <antcall target="deploy-war" />
         <antcall target="start-tomcat"/>
-        <antcall target="create-war-middleware" />
-        <antcall target="deploy-war-middleware" />
-        <antcall target="start-tomcat-middleware"/>
+    	<antcall target="create-war-rm"/>
+    	<antcall target="deploy-war-rm"/>
+    	<antcall target="start-tomcat-rm"/>
     </target>
 
     <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
@@ -142,7 +147,7 @@
                 keep="true"
                 destdir="${basedir}/build/classes"
                 package="client"
-                wsdl="http://${service.host}:${service.middleware.port}/${service.middleware.name}/service?wsdl">
+                wsdl="http://${service.host}:${service.port}/${service.name}/${service.url_pattern}?wsdl">
         </wsimport>
     </target>
 
@@ -162,9 +167,9 @@
                 <path refid="jaxws.classpath"/>
                 <pathelement location="${basedir}/build/classes"/>
             </classpath>
-            <arg value="${service.middleware.name}"/>
+            <arg value="${service.name}"/>
             <arg value="${service.host}"/>
-            <arg value="${service.middleware.port}"/>
+            <arg value="${service.port}"/>
         </java>
     </target>
 

@@ -4,7 +4,7 @@
 package server;
 
 //-------------------------------
-//Adapted from Kevin T. Manley
+//Adapted from  
 //CSE 593
 //-------------------------------
 
@@ -12,8 +12,8 @@ import java.util.*;
 import javax.jws.WebService;
 
 
-//@WebService(endpointInterface = "server.ws.Middleware")
-public class MiddlewareImpl implements server.ws.Middleware {
+@WebService(endpointInterface = "server.ws.ResourceManager")
+public class MiddlewareImpl implements server.ws.ResourceManager {
  
  protected RMHashtable m_itemHT = new RMHashtable();
  
@@ -46,21 +46,21 @@ public class MiddlewareImpl implements server.ws.Middleware {
  
  // Delete the entire item.
  protected boolean deleteItem(int id, String key) {
-     Trace.info("RM::deleteItem(" + id + ", " + key + ") called.");
+     Trace.info("MW::deleteItem(" + id + ", " + key + ") called.");
      ReservableItem curObj = (ReservableItem) readData(id, key);
      // Check if there is such an item in the storage.
      if (curObj == null) {
-         Trace.warn("RM::deleteItem(" + id + ", " + key + ") failed: " 
+         Trace.warn("MW::deleteItem(" + id + ", " + key + ") failed: " 
                  + " item doesn't exist.");
          return false;
      } else {
          if (curObj.getReserved() == 0) {
              removeData(id, curObj.getKey());
-             Trace.info("RM::deleteItem(" + id + ", " + key + ") OK.");
+             Trace.info("MW::deleteItem(" + id + ", " + key + ") OK.");
              return true;
          }
          else {
-             Trace.info("RM::deleteItem(" + id + ", " + key + ") failed: "
+             Trace.info("MW::deleteItem(" + id + ", " + key + ") failed: "
                      + "some customers have reserved it.");
              return false;
          }
@@ -69,37 +69,37 @@ public class MiddlewareImpl implements server.ws.Middleware {
  
  // Query the number of available seats/rooms/cars.
  protected int queryNum(int id, String key) {
-     Trace.info("RM::queryNum(" + id + ", " + key + ") called.");
+     Trace.info("MW::queryNum(" + id + ", " + key + ") called.");
      ReservableItem curObj = (ReservableItem) readData(id, key);
      int value = 0;  
      if (curObj != null) {
          value = curObj.getCount();
      }
-     Trace.info("RM::queryNum(" + id + ", " + key + ") OK: " + value);
+     Trace.info("MW::queryNum(" + id + ", " + key + ") OK: " + value);
      return value;
  }    
  
  // Query the price of an item.
  protected int queryPrice(int id, String key) {
-     Trace.info("RM::queryCarsPrice(" + id + ", " + key + ") called.");
+     Trace.info("MW::queryCarsPrice(" + id + ", " + key + ") called.");
      ReservableItem curObj = (ReservableItem) readData(id, key);
      int value = 0; 
      if (curObj != null) {
          value = curObj.getPrice();
      }
-     Trace.info("RM::queryCarsPrice(" + id + ", " + key + ") OK: $" + value);
+     Trace.info("MW::queryCarsPrice(" + id + ", " + key + ") OK: $" + value);
      return value;
  }
 
  // Reserve an item.
  protected boolean reserveItem(int id, int customerId, 
                                String key, String location) {
-     Trace.info("RM::reserveItem(" + id + ", " + customerId + ", " 
+     Trace.info("MW::reserveItem(" + id + ", " + customerId + ", " 
              + key + ", " + location + ") called.");
      // Read customer object if it exists (and read lock it).
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
-         Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
                 + key + ", " + location + ") failed: customer doesn't exist.");
          return false;
      } 
@@ -107,11 +107,11 @@ public class MiddlewareImpl implements server.ws.Middleware {
      // Check if the item is available.
      ReservableItem item = (ReservableItem) readData(id, key);
      if (item == null) {
-         Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
                  + key + ", " + location + ") failed: item doesn't exist.");
          return false;
      } else if (item.getCount() == 0) {
-         Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
                  + key + ", " + location + ") failed: no more items.");
          return false;
      } else {
@@ -123,7 +123,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
          item.setCount(item.getCount() - 1);
          item.setReserved(item.getReserved() + 1);
          
-         Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
                  + key + ", " + location + ") OK.");
          return true;
      }
@@ -138,14 +138,14 @@ public class MiddlewareImpl implements server.ws.Middleware {
  @Override
  public boolean addFlight(int id, int flightNumber, 
                           int numSeats, int flightPrice) {
-     Trace.info("RM::addFlight(" + id + ", " + flightNumber 
+     Trace.info("MW::addFlight(" + id + ", " + flightNumber 
              + ", $" + flightPrice + ", " + numSeats + ") called.");
      Flight curObj = (Flight) readData(id, Flight.getKey(flightNumber));
      if (curObj == null) {
          // Doesn't exist; add it.
          Flight newObj = new Flight(flightNumber, numSeats, flightPrice);
          writeData(id, newObj.getKey(), newObj);
-         Trace.info("RM::addFlight(" + id + ", " + flightNumber 
+         Trace.info("MW::addFlight(" + id + ", " + flightNumber 
                  + ", $" + flightPrice + ", " + numSeats + ") OK.");
      } else {
          // Add seats to existing flight and update the price.
@@ -154,7 +154,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
              curObj.setPrice(flightPrice);
          }
          writeData(id, curObj.getKey(), curObj);
-         Trace.info("RM::addFlight(" + id + ", " + flightNumber 
+         Trace.info("MW::addFlight(" + id + ", " + flightNumber 
                  + ", $" + flightPrice + ", " + numSeats + ") OK: "
                  + "seats = " + curObj.getCount() + ", price = $" + flightPrice);
      }
@@ -180,14 +180,14 @@ public class MiddlewareImpl implements server.ws.Middleware {
  /*
  // Returns the number of reservations for this flight. 
  public int queryFlightReservations(int id, int flightNumber) {
-     Trace.info("RM::queryFlightReservations(" + id 
+     Trace.info("MW::queryFlightReservations(" + id 
              + ", #" + flightNumber + ") called.");
      RMInteger numReservations = (RMInteger) readData(id, 
              Flight.getNumReservationsKey(flightNumber));
      if (numReservations == null) {
          numReservations = new RMInteger(0);
     }
-     Trace.info("RM::queryFlightReservations(" + id + 
+     Trace.info("MW::queryFlightReservations(" + id + 
              ", #" + flightNumber + ") = " + numReservations);
      return numReservations.getValue();
  }
@@ -198,7 +198,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // make sure we don't delete a flight if one or more customers are 
  // holding reservations.
  public boolean freeFlightReservation(int id, int flightNumber) {
-     Trace.info("RM::freeFlightReservations(" + id + ", " 
+     Trace.info("MW::freeFlightReservations(" + id + ", " 
              + flightNumber + ") called.");
      RMInteger numReservations = (RMInteger) readData(id, 
              Flight.getNumReservationsKey(flightNumber));
@@ -207,7 +207,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
                  Math.max(0, numReservations.getValue() - 1));
      }
      writeData(id, Flight.getNumReservationsKey(flightNumber), numReservations);
-     Trace.info("RM::freeFlightReservations(" + id + ", " 
+     Trace.info("MW::freeFlightReservations(" + id + ", " 
              + flightNumber + ") OK: reservations = " + numReservations);
      return true;
  }
@@ -221,14 +221,14 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // its current price.
  @Override
  public boolean addCars(int id, String location, int numCars, int carPrice) {
-     Trace.info("RM::addCars(" + id + ", " + location + ", " 
+     Trace.info("MW::addCars(" + id + ", " + location + ", " 
              + numCars + ", $" + carPrice + ") called.");
      Car curObj = (Car) readData(id, Car.getKey(location));
      if (curObj == null) {
          // Doesn't exist; add it.
          Car newObj = new Car(location, numCars, carPrice);
          writeData(id, newObj.getKey(), newObj);
-         Trace.info("RM::addCars(" + id + ", " + location + ", " 
+         Trace.info("MW::addCars(" + id + ", " + location + ", " 
                  + numCars + ", $" + carPrice + ") OK.");
      } else {
          // Add count to existing object and update price.
@@ -237,7 +237,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
              curObj.setPrice(carPrice);
          }
          writeData(id, curObj.getKey(), curObj);
-         Trace.info("RM::addCars(" + id + ", " + location + ", " 
+         Trace.info("MW::addCars(" + id + ", " + location + ", " 
                  + numCars + ", $" + carPrice + ") OK: " 
                  + "cars = " + curObj.getCount() + ", price = $" + carPrice);
      }
@@ -270,14 +270,14 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // its current price.
  @Override
  public boolean addRooms(int id, String location, int numRooms, int roomPrice) {
-     Trace.info("RM::addRooms(" + id + ", " + location + ", " 
+     Trace.info("MW::addRooms(" + id + ", " + location + ", " 
              + numRooms + ", $" + roomPrice + ") called.");
      Room curObj = (Room) readData(id, Room.getKey(location));
      if (curObj == null) {
          // Doesn't exist; add it.
          Room newObj = new Room(location, numRooms, roomPrice);
          writeData(id, newObj.getKey(), newObj);
-         Trace.info("RM::addRooms(" + id + ", " + location + ", " 
+         Trace.info("MW::addRooms(" + id + ", " + location + ", " 
                  + numRooms + ", $" + roomPrice + ") OK.");
      } else {
          // Add count to existing object and update price.
@@ -286,7 +286,7 @@ public class MiddlewareImpl implements server.ws.Middleware {
              curObj.setPrice(roomPrice);
          }
          writeData(id, curObj.getKey(), curObj);
-         Trace.info("RM::addRooms(" + id + ", " + location + ", " 
+         Trace.info("MW::addRooms(" + id + ", " + location + ", " 
                  + numRooms + ", $" + roomPrice + ") OK: " 
                  + "rooms = " + curObj.getCount() + ", price = $" + roomPrice);
      }
@@ -316,29 +316,29 @@ public class MiddlewareImpl implements server.ws.Middleware {
 
  @Override
  public int newCustomer(int id) {
-     Trace.info("INFO: RM::newCustomer(" + id + ") called.");
+     Trace.info("INFO: MW::newCustomer(" + id + ") called.");
      // Generate a globally unique Id for the new customer.
      int customerId = Integer.parseInt(String.valueOf(id) +
              String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
              String.valueOf(Math.round(Math.random() * 100 + 1)));
      Customer cust = new Customer(customerId);
      writeData(id, cust.getKey(), cust);
-     Trace.info("RM::newCustomer(" + id + ") OK: " + customerId);
+     Trace.info("MW::newCustomer(" + id + ") OK: " + customerId);
      return customerId;
  }
 
  // This method makes testing easier.
  @Override
  public boolean newCustomerId(int id, int customerId) {
-     Trace.info("INFO: RM::newCustomer(" + id + ", " + customerId + ") called.");
+     Trace.info("INFO: MW::newCustomer(" + id + ", " + customerId + ") called.");
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
          cust = new Customer(customerId);
          writeData(id, cust.getKey(), cust);
-         Trace.info("INFO: RM::newCustomer(" + id + ", " + customerId + ") OK.");
+         Trace.info("INFO: MW::newCustomer(" + id + ", " + customerId + ") OK.");
          return true;
      } else {
-         Trace.info("INFO: RM::newCustomer(" + id + ", " + 
+         Trace.info("INFO: MW::newCustomer(" + id + ", " + 
                  customerId + ") failed: customer already exists.");
          return false;
      }
@@ -347,10 +347,10 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // Delete customer from the database. 
  @Override
  public boolean deleteCustomer(int id, int customerId) {
-     Trace.info("RM::deleteCustomer(" + id + ", " + customerId + ") called.");
+     Trace.info("MW::deleteCustomer(" + id + ", " + customerId + ") called.");
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
-         Trace.warn("RM::deleteCustomer(" + id + ", " 
+         Trace.warn("MW::deleteCustomer(" + id + ", " 
                  + customerId + ") failed: customer doesn't exist.");
          return false;
      } else {            
@@ -360,20 +360,20 @@ public class MiddlewareImpl implements server.ws.Middleware {
          for (Enumeration e = reservationHT.keys(); e.hasMoreElements();) {        
              String reservedKey = (String) (e.nextElement());
              ReservedItem reservedItem = cust.getReservedItem(reservedKey);
-             Trace.info("RM::deleteCustomer(" + id + ", " + customerId + "): " 
+             Trace.info("MW::deleteCustomer(" + id + ", " + customerId + "): " 
                      + "deleting " + reservedItem.getCount() + " reservations "
                      + "for item " + reservedItem.getKey());
              ReservableItem item = 
                      (ReservableItem) readData(id, reservedItem.getKey());
              item.setReserved(item.getReserved() - reservedItem.getCount());
              item.setCount(item.getCount() + reservedItem.getCount());
-             Trace.info("RM::deleteCustomer(" + id + ", " + customerId + "): "
+             Trace.info("MW::deleteCustomer(" + id + ", " + customerId + "): "
                      + reservedItem.getKey() + " reserved/available = " 
                      + item.getReserved() + "/" + item.getCount());
          }
          // Remove the customer from the storage.
          removeData(id, cust.getKey());
-         Trace.info("RM::deleteCustomer(" + id + ", " + customerId + ") OK.");
+         Trace.info("MW::deleteCustomer(" + id + ", " + customerId + ") OK.");
          return true;
      }
  }
@@ -382,11 +382,11 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // Returns null if the customer doesn't exist. 
  // Returns empty RMHashtable if customer exists but has no reservations.
  public RMHashtable getCustomerReservations(int id, int customerId) {
-     Trace.info("RM::getCustomerReservations(" + id + ", " 
+     Trace.info("MW::getCustomerReservations(" + id + ", " 
              + customerId + ") called.");
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
-         Trace.info("RM::getCustomerReservations(" + id + ", " 
+         Trace.info("MW::getCustomerReservations(" + id + ", " 
                  + customerId + ") failed: customer doesn't exist.");
          return null;
      } else {
@@ -397,16 +397,16 @@ public class MiddlewareImpl implements server.ws.Middleware {
  // Return a bill.
  @Override
  public String queryCustomerInfo(int id, int customerId) {
-     Trace.info("RM::queryCustomerInfo(" + id + ", " + customerId + ") called.");
+     Trace.info("MW::queryCustomerInfo(" + id + ", " + customerId + ") called.");
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
-         Trace.warn("RM::queryCustomerInfo(" + id + ", " 
+         Trace.warn("MW::queryCustomerInfo(" + id + ", " 
                  + customerId + ") failed: customer doesn't exist.");
          // Returning an empty bill means that the customer doesn't exist.
          return "";
      } else {
          String s = cust.printBill();
-         Trace.info("RM::queryCustomerInfo(" + id + ", " + customerId + "): \n");
+         Trace.info("MW::queryCustomerInfo(" + id + ", " + customerId + "): \n");
          System.out.println(s);
          return s;
      }
