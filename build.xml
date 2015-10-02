@@ -19,6 +19,16 @@
             <include name="*.jar"/>
         </fileset>
     </path>
+    
+    <target name="build-main">
+        <javac
+                fork="true"
+                srcdir="${basedir}/src/main"
+                destdir="${basedir}/build"
+                >
+            <classpath refid="jaxws.classpath"/>
+        </javac>
+    </target>
 
     <target name="clean">
         <delete dir="${basedir}/build" includeEmptyDirs="true"/>
@@ -104,12 +114,12 @@
             dest="${basedir}/webapps/${service.name}"/>
     </target>
     
-    <target name="start-tomcat">
+    <target name="start-tomcat" depends="build-main">
         <echo message="Starting Tomcat and deploying service ... "/>
-        <java fork="true" classname="server.ws.Main">
+        <java fork="true" classname="main.Main">
             <classpath>
                 <path refid="jaxws.classpath"/>
-                <pathelement location="${basedir}/build/classes"/>
+                <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
             <arg value="${service.name}"/>
@@ -140,12 +150,12 @@
             dest="${basedir}/webapps/${service.rm.name}"/>
     </target>
     
-    <target name="start-tomcat-rm">
+    <target name="start-tomcat-rm" depends="build-main">
         <echo message="Starting Tomcat and deploying service ... "/>
-        <java fork="true" classname="server.ws.Main">
+        <java fork="true" classname="main.Main">
             <classpath>
                 <path refid="jaxws.classpath"/>
-                <pathelement location="${basedir}/build/classes"/>
+                <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
             <arg value="${service.rm.name}"/>
