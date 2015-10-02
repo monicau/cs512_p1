@@ -150,7 +150,7 @@
     
     <target name="rm" depends="setup">
         <antcall target="clean"/>
-        <antcall target="build-server-rm"/>
+        <antcall target="build-server"/>
     	<antcall target="create-war-rm"/>
     	<antcall target="deploy-war-rm"/>
     	<antcall target="start-tomcat-rm"/>
