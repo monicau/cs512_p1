@@ -11,6 +11,12 @@
 	<property name="service.rm.host" value="localhost"/>
     <property name="service.rm.port" value="8088"/>
     <property name="service.rm.url_pattern" value="rm"/>
+    
+	<property name="service.rm2.host" value="localhost"/>
+    <property name="service.rm2.port" value="8089"/>
+    
+    <property name="service.rm3.host" value="localhost"/>
+    <property name="service.rm3.port" value="8090"/>
 	
     <path id="jaxws.classpath">
         <pathelement location="${java.home}/../lib/tools.jar"/>
@@ -164,12 +170,26 @@
         </java>
     </target>
     
-    <target name="start-tomcat-rm3">
+    <target name="start-tomcat-rm2" depends="build-main">
         <echo message="Starting Tomcat and deploying service ... "/>
-        <java fork="true" classname="server.ws.Main">
+        <java fork="true" classname="main.Main">
             <classpath>
                 <path refid="jaxws.classpath"/>
-                <pathelement location="${basedir}/build/classes"/>
+                <pathelement location="${basedir}/build"/>
+            </classpath>
+            <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
+            <arg value="${service.rm.name}"/>
+            <arg value="${service.rm2.port}"/>
+            <arg value="${basedir}/webapps"/>
+        </java>
+    </target>
+    
+    <target name="start-tomcat-rm3" depends="build-main">
+        <echo message="Starting Tomcat and deploying service ... "/>
+        <java fork="true" classname="main.Main">
+            <classpath>
+                <path refid="jaxws.classpath"/>
+                <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
             <arg value="${service.rm.name}"/>
@@ -198,10 +218,20 @@
     </target>
     
     <target name="rm2">
+        <antcall target="clean"/>
+        <antcall target="setup" />
+        <antcall target="build-server-rm"/>
+    	<antcall target="create-war-rm"/>
+    	<antcall target="deploy-war-rm"/>
     	<antcall target="start-tomcat-rm2"/>
     </target>
     
      <target name="rm3">
+         <antcall target="clean"/>
+        <antcall target="setup" />
+        <antcall target="build-server-rm"/>
+    	<antcall target="create-war-rm"/>
+    	<antcall target="deploy-war-rm"/>
     	<antcall target="start-tomcat-rm3"/>
     </target>
     

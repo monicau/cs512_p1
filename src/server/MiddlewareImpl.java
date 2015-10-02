@@ -26,24 +26,33 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManagerImplService service;
 	
 public MiddlewareImpl() {
-	Trace.info("!!!!! MW about to create flight proxy");
-	Context env;
-	String flightServiceHost;
-	Integer flightServicePort;
-	URL wsdlLocation;
 	try {
-		env = (Context) new InitialContext().lookup("java:comp/env");
-		flightServiceHost = (String) env.lookup("flight-service-host");
-		flightServicePort = (Integer) env.lookup("flight-service-port");
-        Trace.info("!!!! Flight host:" + flightServiceHost);
-        Trace.info("!!!! Flight port:" + flightServicePort);
-        wsdlLocation = new URL("http", flightServiceHost, flightServicePort, 
-                "/" + "rm" + "/rm?wsdl");
+		Context env = (Context) new InitialContext().lookup("java:comp/env");
+		String flightServiceHost = (String) env.lookup("flight-service-host");
+		Integer flightServicePort = (Integer) env.lookup("flight-service-port");
+		String carServiceHost = (String) env.lookup("car-service-host");
+		Integer carServicePort = (Integer) env.lookup("car-service-port");
+		String roomServiceHost = (String) env.lookup("room-service-host");
+		Integer roomServicePort = (Integer) env.lookup("room-service-port");
+        Trace.info("Flight host:" + flightServiceHost);
+        Trace.info("Flight port:" + flightServicePort);
+        Trace.info("Car host:" + carServiceHost);
+        Trace.info("Car port:" + carServicePort);
+        Trace.info("Room host:" + roomServiceHost);
+        Trace.info("Room port:" + roomServicePort);
+        URL wsdlLocation = new URL("http", flightServiceHost, flightServicePort, "/" + "rm" + "/rm?wsdl");
         service = new ResourceManagerImplService(wsdlLocation);
         proxyFlight = service.getResourceManagerImplPort();
         
+        wsdlLocation = new URL("http", carServiceHost, carServicePort, "/" + "rm" + "/rm?wsdl");
+        service = new ResourceManagerImplService(wsdlLocation);
+        proxyCar= service.getResourceManagerImplPort();
+        
+        wsdlLocation = new URL("http", roomServiceHost, roomServicePort, "/" + "rm" + "/rm?wsdl");
+        service = new ResourceManagerImplService(wsdlLocation);
+        proxyRoom= service.getResourceManagerImplPort();
 	} catch (NamingException e) {
-		Trace.info("ERROR!!! CANNOT GRAB RM INFO FROM WEB.XML");
+		Trace.info("ERROR!! CANNOT GRAB RM INFO FROM WEB.XML");
 	} catch (MalformedURLException e) {
 		Trace.info("ERROR!! Malformed url.");
 	}
