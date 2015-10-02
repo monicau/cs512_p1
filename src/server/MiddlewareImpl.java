@@ -15,8 +15,7 @@ import javax.jws.WebService;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import server.ws.ResourceManager;
+import server.ResourceManager;
 
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
@@ -24,6 +23,7 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManager proxyFlight;
 	ResourceManager proxyCar;
 	ResourceManager proxyRoom;
+	ResourceManagerImplService service;
 	
 public MiddlewareImpl() {
 	Trace.info("!!!!! MW about to create flight proxy");
@@ -38,7 +38,9 @@ public MiddlewareImpl() {
         Trace.info("!!!! Flight host:" + flightServiceHost);
         Trace.info("!!!! Flight port:" + flightServicePort);
         wsdlLocation = new URL("http", flightServiceHost, flightServicePort, 
-                "/" + "rm" + "/service?wsdl");
+                "/" + "rm" + "/rm?wsdl");
+        service = new ResourceManagerImplService(wsdlLocation);
+        proxyFlight = service.getResourceManagerImplPort();
         
 	} catch (NamingException e) {
 		Trace.info("ERROR!!! CANNOT GRAB RM INFO FROM WEB.XML");

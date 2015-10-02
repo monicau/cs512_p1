@@ -14,7 +14,11 @@
   <endpoint
       name="ResourceManager"
       implementation="server.ResourceManagerImpl"
-      url-pattern="/rm"/> 	
-	
+      url-pattern="/rm"/>
+  <endpoint
+      name="Middleware"
+      implementation="server.MiddlewareImpl"
+      url-pattern="/service"/>  	
+ 
   
 </endpoints>
