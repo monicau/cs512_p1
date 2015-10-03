@@ -15,10 +15,8 @@ import java.util.Enumeration;
 import java.util.Vector;
 import java.net.URL;
 import java.net.MalformedURLException;
+
 import javax.jws.WebService;
-
-import server.ResourceManager;
-
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class MiddlewareImpl implements server.ws.ResourceManager {
@@ -197,41 +195,25 @@ public MiddlewareImpl() {
                           int numSeats, int flightPrice) {
      Trace.info("MW::addFlight(" + id + ", " + flightNumber 
              + ", $" + flightPrice + ", " + numSeats + ") called.");
-     Flight curObj = (Flight) readData(id, Flight.getKey(flightNumber));
-     if (curObj == null) {
-         // Doesn't exist; add it.
-         Flight newObj = new Flight(flightNumber, numSeats, flightPrice);
-         writeData(id, newObj.getKey(), newObj);
-         Trace.info("MW::addFlight(" + id + ", " + flightNumber 
-                 + ", $" + flightPrice + ", " + numSeats + ") OK.");
-     } else {
-         // Add seats to existing flight and update the price.
-         curObj.setCount(curObj.getCount() + numSeats);
-         if (flightPrice > 0) {
-             curObj.setPrice(flightPrice);
-         }
-         writeData(id, curObj.getKey(), curObj);
-         Trace.info("MW::addFlight(" + id + ", " + flightNumber 
-                 + ", $" + flightPrice + ", " + numSeats + ") OK: "
-                 + "seats = " + curObj.getCount() + ", price = $" + flightPrice);
-     }
-     return(true);
+     boolean returnValue = proxyFlight.addFlight(id, flightNumber, numSeats, flightPrice);
+     Trace.info("MW:: addFlight succeeded:" + Boolean.toString(returnValue));
+     return returnValue;
  }
 
  @Override
  public boolean deleteFlight(int id, int flightNumber) {
-     return deleteItem(id, Flight.getKey(flightNumber));
+     return proxyFlight.deleteFlight(id, flightNumber);
  }
 
  // Returns the number of empty seats on this flight.
  @Override
  public int queryFlight(int id, int flightNumber) {
-     return queryNum(id, Flight.getKey(flightNumber));
+	 return proxyFlight.queryFlight(id, flightNumber);
  }
 
  // Returns price of this flight.
  public int queryFlightPrice(int id, int flightNumber) {
-     return queryPrice(id, Flight.getKey(flightNumber));
+     return proxyFlight.queryFlightPrice(id, flightNumber);
  }
 
  /*
@@ -280,43 +262,27 @@ public MiddlewareImpl() {
  public boolean addCars(int id, String location, int numCars, int carPrice) {
      Trace.info("MW::addCars(" + id + ", " + location + ", " 
              + numCars + ", $" + carPrice + ") called.");
-     Car curObj = (Car) readData(id, Car.getKey(location));
-     if (curObj == null) {
-         // Doesn't exist; add it.
-         Car newObj = new Car(location, numCars, carPrice);
-         writeData(id, newObj.getKey(), newObj);
-         Trace.info("MW::addCars(" + id + ", " + location + ", " 
-                 + numCars + ", $" + carPrice + ") OK.");
-     } else {
-         // Add count to existing object and update price.
-         curObj.setCount(curObj.getCount() + numCars);
-         if (carPrice > 0) {
-             curObj.setPrice(carPrice);
-         }
-         writeData(id, curObj.getKey(), curObj);
-         Trace.info("MW::addCars(" + id + ", " + location + ", " 
-                 + numCars + ", $" + carPrice + ") OK: " 
-                 + "cars = " + curObj.getCount() + ", price = $" + carPrice);
-     }
-     return(true);
+     boolean returnValue = proxyCar.addCars(id, location, numCars, carPrice);
+     Trace.info("MW::addCar succeeded: " + Boolean.toString(returnValue));
+     return returnValue;
  }
 
  // Delete cars from a location.
  @Override
  public boolean deleteCars(int id, String location) {
-     return deleteItem(id, Car.getKey(location));
+     return proxyCar.deleteCars(id, location);
  }
 
  // Returns the number of cars available at a location.
  @Override
  public int queryCars(int id, String location) {
-     return queryNum(id, Car.getKey(location));
+     return proxyCar.queryCars(id, location);
  }
 
  // Returns price of cars at this location.
  @Override
  public int queryCarsPrice(int id, String location) {
-     return queryPrice(id, Car.getKey(location));
+     return proxyCar.queryCarsPrice(id, location);
  }
  
 
@@ -329,43 +295,27 @@ public MiddlewareImpl() {
  public boolean addRooms(int id, String location, int numRooms, int roomPrice) {
      Trace.info("MW::addRooms(" + id + ", " + location + ", " 
              + numRooms + ", $" + roomPrice + ") called.");
-     Room curObj = (Room) readData(id, Room.getKey(location));
-     if (curObj == null) {
-         // Doesn't exist; add it.
-         Room newObj = new Room(location, numRooms, roomPrice);
-         writeData(id, newObj.getKey(), newObj);
-         Trace.info("MW::addRooms(" + id + ", " + location + ", " 
-                 + numRooms + ", $" + roomPrice + ") OK.");
-     } else {
-         // Add count to existing object and update price.
-         curObj.setCount(curObj.getCount() + numRooms);
-         if (roomPrice > 0) {
-             curObj.setPrice(roomPrice);
-         }
-         writeData(id, curObj.getKey(), curObj);
-         Trace.info("MW::addRooms(" + id + ", " + location + ", " 
-                 + numRooms + ", $" + roomPrice + ") OK: " 
-                 + "rooms = " + curObj.getCount() + ", price = $" + roomPrice);
-     }
-     return(true);
+     boolean returnValue = proxyRoom.addRooms(id, location, numRooms, roomPrice);
+     Trace.info("MW::addRooms succeeded: " + Boolean.toString(returnValue));
+     return returnValue;
  }
 
  // Delete rooms from a location.
  @Override
  public boolean deleteRooms(int id, String location) {
-     return deleteItem(id, Room.getKey(location));
+     return proxyRoom.deleteRooms(id, location);
  }
 
  // Returns the number of rooms available at a location.
  @Override
  public int queryRooms(int id, String location) {
-     return queryNum(id, Room.getKey(location));
+     return proxyRoom.queryRooms(id, location);
  }
  
  // Returns room price at this location.
  @Override
  public int queryRoomsPrice(int id, String location) {
-     return queryPrice(id, Room.getKey(location));
+     return proxyRoom.queryRoomsPrice(id, location);
  }
 
 
