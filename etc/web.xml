@@ -27,7 +27,7 @@ Inc.//DTD Web Application 2.3//EN"
         <session-timeout>120</session-timeout>
     </session-config>
     
-    <env-entry>
+	<env-entry>
 	    <env-entry-name>flight-service-host</env-entry-name>
 	    <env-entry-value>localhost</env-entry-value>
 	    <env-entry-type>java.lang.String</env-entry-type>

@@ -131,6 +131,12 @@
             <arg value="${service.name}"/>
             <arg value="${service.port}"/>
             <arg value="${basedir}/webapps"/>
+            <arg value="${service.rm.host}"/>
+            <arg value="${service.rm.port}"/>
+            <arg value="${service.rm2.host}"/>
+            <arg value="${service.rm2.port}"/>
+            <arg value="${service.rm3.host}"/>
+            <arg value="${service.rm3.port}"/>
         </java>
     </target>
 

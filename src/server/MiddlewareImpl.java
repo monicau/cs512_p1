@@ -5,16 +5,18 @@ package server;
 //CSE 593
 //-------------------------------
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Vector;
-
+import java.net.URL;
+import java.net.MalformedURLException;
 import javax.jws.WebService;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+
 import server.ResourceManager;
 
 
@@ -26,35 +28,47 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManagerImplService service;
 	
 public MiddlewareImpl() {
+
+	String flightServiceHost = null;
+	Integer flightServicePort = null;
+	String carServiceHost = null;
+	Integer carServicePort = null;
+	String roomServiceHost = null;
+	Integer roomServicePort = null;
 	try {
-		Context env = (Context) new InitialContext().lookup("java:comp/env");
-		String flightServiceHost = (String) env.lookup("flight-service-host");
-		Integer flightServicePort = (Integer) env.lookup("flight-service-port");
-		String carServiceHost = (String) env.lookup("car-service-host");
-		Integer carServicePort = (Integer) env.lookup("car-service-port");
-		String roomServiceHost = (String) env.lookup("room-service-host");
-		Integer roomServicePort = (Integer) env.lookup("room-service-port");
-        Trace.info("Flight host:" + flightServiceHost);
-        Trace.info("Flight port:" + flightServicePort);
-        Trace.info("Car host:" + carServiceHost);
-        Trace.info("Car port:" + carServicePort);
-        Trace.info("Room host:" + roomServiceHost);
-        Trace.info("Room port:" + roomServicePort);
-        URL wsdlLocation = new URL("http", flightServiceHost, flightServicePort, "/" + "rm" + "/rm?wsdl");
-        service = new ResourceManagerImplService(wsdlLocation);
-        proxyFlight = service.getResourceManagerImplPort();
-        
-        wsdlLocation = new URL("http", carServiceHost, carServicePort, "/" + "rm" + "/rm?wsdl");
-        service = new ResourceManagerImplService(wsdlLocation);
-        proxyCar= service.getResourceManagerImplPort();
-        
-        wsdlLocation = new URL("http", roomServiceHost, roomServicePort, "/" + "rm" + "/rm?wsdl");
-        service = new ResourceManagerImplService(wsdlLocation);
-        proxyRoom= service.getResourceManagerImplPort();
-	} catch (NamingException e) {
-		Trace.info("ERROR!! CANNOT GRAB RM INFO FROM WEB.XML");
-	} catch (MalformedURLException e) {
-		Trace.info("ERROR!! Malformed url.");
+		BufferedReader reader = new BufferedReader(new FileReader(new File("rm.txt")));
+		String[] line = new String[6];
+		try {
+			for (int i=0; i<6; i++) {
+				line[i] = reader.readLine();
+				Trace.info("Read: " + line[i]);
+			}
+			flightServiceHost = line[0];
+			flightServicePort = Integer.parseInt(line[1]);
+			carServiceHost = line[2];
+			carServicePort = Integer.parseInt(line[3]);
+			roomServiceHost = line[4];
+			roomServicePort = Integer.parseInt(line[5]);
+			try {
+		        URL wsdlLocation = new URL("http", flightServiceHost, flightServicePort, "/" + "rm" + "/rm?wsdl");
+		        service = new ResourceManagerImplService(wsdlLocation);
+		        proxyFlight = service.getResourceManagerImplPort();
+		        
+		        wsdlLocation = new URL("http", carServiceHost, carServicePort, "/" + "rm" + "/rm?wsdl");
+		        service = new ResourceManagerImplService(wsdlLocation);
+		        proxyCar= service.getResourceManagerImplPort();
+		        
+		        wsdlLocation = new URL("http", roomServiceHost, roomServicePort, "/" + "rm" + "/rm?wsdl");
+		        service = new ResourceManagerImplService(wsdlLocation);
+		        proxyRoom= service.getResourceManagerImplPort();
+			} catch (MalformedURLException e) {
+				Trace.info("ERROR!! Malformed url.");
+			}
+		} catch (IOException e) {
+			Trace.info("ERROR: Reading line failed! IOException.");
+		}
+	} catch (FileNotFoundException e) {
+		Trace.info("ERROR: File not found!");
 	}
 	
 }
