@@ -11,7 +11,8 @@
 
 ```ant rm3 -Dservice.rm3.host=HOSTNAME -Dservice.rm3.port=PORT```
 
-By default without arguments, the hostname is localhost and the ports are 8088, 8089, 8090
+By default without arguments, the hostname is localhost and the ports are 8088, 8089, 8090. 
+
 Access via: http://HOSTNAME:PORT/rm/rm
 
 ###Middleware 
