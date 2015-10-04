@@ -422,30 +422,42 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     public boolean reserveFlight(int id, int customerId, int flightNumber) {
     	return false;
     }
-
-    // Add flight reservation to this customer.  
-    public boolean rmReserveFlight(int id, int flightNumber) {
-//        return reserveItem(id, customerId, Flight.getKey(flightNumber), String.valueOf(flightNumber));
-        
-        String key = Flight.getKey(flightNumber);
-        String location = String.valueOf(flightNumber);
-        
-     // Check if the item is available.
+    /**
+     * 
+     * @param reserveType	flight, car or room
+     * @param id			id 
+     * @param flightNumber	flight number if applicable
+     * @param location		car or room location if applicable
+     * @return	true for success, false for failure
+     */
+    // Add reservation  
+    public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
+    	String key = null;
+    	if (reserveType.toLowerCase().equals("flight")) {
+    		location = String.valueOf(flightNumber);        
+    		key = Flight.getKey(flightNumber);
+        } else if (reserveType.toLowerCase().equals("car")) {
+        	key = Car.getKey(location);
+        } else if (reserveType.toLowerCase().equals("room")) {
+        	key = Room.getKey(location);
+        } else {
+        	return false;
+        }
+    	// Check if the item is available.
         ReservableItem item = (ReservableItem) readData(id, key);
         if (item == null) {
-            Trace.warn("RM::rmReserveFlight failed: item doesn't exist.");
+            Trace.warn("RM::rmReserve failed: item doesn't exist.");
             return false;
         } else if (item.getCount() == 0) {
-            Trace.warn("RM::rmReserveFlight failed: no more items.");
+            Trace.warn("RM::rmReserve failed: no more items.");
             return false;
         } else {
             // Do reservation.
-            
             // Decrease the number of available items in the storage.
             item.setCount(item.getCount() - 1);
             item.setReserved(item.getReserved() + 1);
             
-            Trace.warn("RM::rmReserveFlight(" + id + ", " + flightNumber + ") OK.");
+            Trace.warn("RM::rmReserve(" + reserveType + ", " + id + ", " + Integer.toString(flightNumber) + ", " + location + ") OK.");
             return true;
         }
     }

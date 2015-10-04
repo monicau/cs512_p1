@@ -128,13 +128,14 @@ public interface ResourceManager {
     /* Return a bill. */
     @WebMethod
     public String queryCustomerInfo(int id, int customerId); 
+    
+    /* Resource manager's reserve method */
+    @WebMethod
+    public boolean rmReserve(String reserveType, int id, int flightNumber, String location);
 
     /* Reserve a seat on this flight. */
     @WebMethod
     public boolean reserveFlight(int id, int customerId, int flightNumber); 
-    
-    @WebMethod
-    public boolean rmReserveFlight(int id, int flightNumber);
 
     /* Reserve a car at this location. */
     @WebMethod

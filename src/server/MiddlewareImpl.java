@@ -16,6 +16,7 @@ import java.util.Vector;
 import java.net.URL;
 import java.net.MalformedURLException;
 
+import javax.jws.WebMethod;
 import javax.jws.WebService;
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
@@ -419,38 +420,53 @@ public MiddlewareImpl() {
      }
  }
 
+ public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
+	 return false;
+ }
+
  // Add flight reservation to this customer.  
  @Override
  public boolean reserveFlight(int id, int customerId, int flightNumber) {
-     String key = Flight.getKey(flightNumber);
-     String location = String.valueOf(flightNumber);
-     
-  // Read customer object if it exists (and read lock it).
+	 // Read customer object if it exists (and read lock it).
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
      if (cust == null) {
-         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
-                + key + ", " + location + ") failed: customer doesn't exist.");
+         Trace.warn("MW::reserveFlight(" + id + ", " + customerId +  ", " + flightNumber + ") failed: customer doesn't exist.");
          return false;
      } 
-     boolean result = proxyFlight.rmReserveFlight(id, flightNumber);
+     //Reserve
+     boolean result = proxyFlight.rmReserve("flight", id, flightNumber, null);
      Trace.warn("MW::reserveFlight succeeded: " + result);
      return result;
  }
  
- public boolean rmReserveFlight(int id, int flightNumber) {
-	 return false;
- }
-
  // Add car reservation to this customer. 
  @Override
  public boolean reserveCar(int id, int customerId, String location) {
-     return reserveItem(id, customerId, Car.getKey(location), location);
+	// Read customer object if it exists (and read lock it).
+     Customer cust = (Customer) readData(id, Customer.getKey(customerId));
+     if (cust == null) {
+         Trace.warn("MW::reserveCar(" + id + ", " + customerId +  ", " + location + ") failed: customer doesn't exist.");
+         return false;
+     } 
+     //Reserve
+     boolean result = proxyCar.rmReserve("car", id, -1, location);
+     Trace.warn("MW::reserveCar succeeded: " + result);
+     return result;
  }
 
  // Add room reservation to this customer. 
  @Override
  public boolean reserveRoom(int id, int customerId, String location) {
-     return reserveItem(id, customerId, Room.getKey(location), location);
+	// Read customer object if it exists (and read lock it).
+     Customer cust = (Customer) readData(id, Customer.getKey(customerId));
+     if (cust == null) {
+         Trace.warn("MW::reserveRoom(" + id + ", " + customerId +  ", " + location + ") failed: customer doesn't exist.");
+         return false;
+     } 
+     //Reserve
+     boolean result = proxyRoom.rmReserve("room", id, -1, location);
+     Trace.warn("MW::reserveRoom succeeded: " + result);
+     return result;
  }
  
 
