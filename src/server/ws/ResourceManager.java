@@ -17,12 +17,20 @@
 package server.ws;
 
 import java.util.*;
+
 import javax.jws.WebService;
 import javax.jws.WebMethod;
 
 
 @WebService
 public interface ResourceManager {
+	
+	// General operations //
+//	@WebMethod
+//	public int queryNum(int id, String key);
+//	
+//	@WebMethod
+//	public int queryPrice(int id, String key);
     
     // Flight operations //
     
@@ -124,6 +132,9 @@ public interface ResourceManager {
     /* Reserve a seat on this flight. */
     @WebMethod
     public boolean reserveFlight(int id, int customerId, int flightNumber); 
+    
+    @WebMethod
+    public boolean rmReserveFlight(int id, int flightNumber);
 
     /* Reserve a car at this location. */
     @WebMethod

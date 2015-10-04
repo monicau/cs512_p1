@@ -6,6 +6,7 @@
 package server;
 
 import java.util.*;
+
 import javax.jws.WebService;
 
 
@@ -24,7 +25,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
         }
     }
     
-    public ReservableItem getReservableItem(int id, String key) {
+    private ReservableItem getReservableItem(int id, String key) {
     	synchronized(m_itemHT) {
             return (ReservableItem) m_itemHT.get(key);
         }
@@ -131,6 +132,8 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
             return true;
         }
     }
+    
+    //Set count
     
     
     // Flight operations //
@@ -414,12 +417,37 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
             return s;
         }
     }
-
-    // Add flight reservation to this customer.  
+    
     @Override
     public boolean reserveFlight(int id, int customerId, int flightNumber) {
-        return reserveItem(id, customerId, 
-                Flight.getKey(flightNumber), String.valueOf(flightNumber));
+    	return false;
+    }
+
+    // Add flight reservation to this customer.  
+    public boolean rmReserveFlight(int id, int flightNumber) {
+//        return reserveItem(id, customerId, Flight.getKey(flightNumber), String.valueOf(flightNumber));
+        
+        String key = Flight.getKey(flightNumber);
+        String location = String.valueOf(flightNumber);
+        
+     // Check if the item is available.
+        ReservableItem item = (ReservableItem) readData(id, key);
+        if (item == null) {
+            Trace.warn("RM::rmReserveFlight failed: item doesn't exist.");
+            return false;
+        } else if (item.getCount() == 0) {
+            Trace.warn("RM::rmReserveFlight failed: no more items.");
+            return false;
+        } else {
+            // Do reservation.
+            
+            // Decrease the number of available items in the storage.
+            item.setCount(item.getCount() - 1);
+            item.setReserved(item.getReserved() + 1);
+            
+            Trace.warn("RM::rmReserveFlight(" + id + ", " + flightNumber + ") OK.");
+            return true;
+        }
     }
 
     // Add car reservation to this customer. 
