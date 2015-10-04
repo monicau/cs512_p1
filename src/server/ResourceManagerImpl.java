@@ -23,6 +23,12 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
             return (RMItem) m_itemHT.get(key);
         }
     }
+    
+    public ReservableItem getReservableItem(int id, String key) {
+    	synchronized(m_itemHT) {
+            return (ReservableItem) m_itemHT.get(key);
+        }
+    }
 
     // Write a data item.
     private void writeData(int id, String key, RMItem value) {

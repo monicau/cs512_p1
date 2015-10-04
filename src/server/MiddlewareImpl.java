@@ -422,8 +422,42 @@ public MiddlewareImpl() {
  // Add flight reservation to this customer.  
  @Override
  public boolean reserveFlight(int id, int customerId, int flightNumber) {
-     return reserveItem(id, customerId, 
-             Flight.getKey(flightNumber), String.valueOf(flightNumber));
+//     return reserveItem(id, customerId, Flight.getKey(flightNumber), String.valueOf(flightNumber));
+     String key = Flight.getKey(flightNumber);
+     String location = String.valueOf(flightNumber);
+     
+  // Read customer object if it exists (and read lock it).
+     Customer cust = (Customer) readData(id, Customer.getKey(customerId));
+     if (cust == null) {
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
+                + key + ", " + location + ") failed: customer doesn't exist.");
+         return false;
+     } 
+     
+     // Check if the item is available.
+     ReservableItem item = proxyFlight.getReservableItem(id, key);
+     if (item == null) {
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
+                 + key + ", " + location + ") failed: item doesn't exist.");
+         return false;
+     } else if (item.getCount() == 0) {
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
+                 + key + ", " + location + ") failed: no more items.");
+         return false;
+     } else {
+         // Do reservation.
+         cust.reserve(key, location, item.getPrice());
+         writeData(id, cust.getKey(), cust);
+         
+         // Decrease the number of available items in the storage.
+         proxyFlight.setCount(item.getCount() - 1);
+         proxyFlight.setReserved(item.getReserved() + 1);
+         
+         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
+                 + key + ", " + location + ") OK.");
+         return true;
+     }
+     
  }
 
  // Add car reservation to this customer. 
