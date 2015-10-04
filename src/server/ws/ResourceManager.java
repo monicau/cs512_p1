@@ -26,12 +26,9 @@ import javax.jws.WebMethod;
 public interface ResourceManager {
 	
 	// General operations //
-//	@WebMethod
-//	public int queryNum(int id, String key);
-//	
-//	@WebMethod
-//	public int queryPrice(int id, String key);
-    
+	@WebMethod
+	 public int getPrice(int id, String key);
+
     // Flight operations //
     
     /* Add seats to a flight.  
@@ -133,6 +130,10 @@ public interface ResourceManager {
     @WebMethod
     public boolean rmReserve(String reserveType, int id, int flightNumber, String location);
 
+    /* Resource manager's unreserve method */
+    @WebMethod
+    public boolean rmUnreserve(int id, String key, int reservationCount);
+    
     /* Reserve a seat on this flight. */
     @WebMethod
     public boolean reserveFlight(int id, int customerId, int flightNumber); 

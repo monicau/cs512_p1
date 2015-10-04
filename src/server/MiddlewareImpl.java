@@ -146,6 +146,11 @@ public MiddlewareImpl() {
      Trace.info("MW::queryCarsPrice(" + id + ", " + key + ") OK: $" + value);
      return value;
  }
+ 
+ //Public version
+ public int getPrice(int id, String key) {
+ 	return queryPrice(id, key);
+ }
 
  // Reserve an item.
  protected boolean reserveItem(int id, int customerId, 
@@ -371,13 +376,18 @@ public MiddlewareImpl() {
              Trace.info("MW::deleteCustomer(" + id + ", " + customerId + "): " 
                      + "deleting " + reservedItem.getCount() + " reservations "
                      + "for item " + reservedItem.getKey());
-             ReservableItem item = 
-                     (ReservableItem) readData(id, reservedItem.getKey());
-             item.setReserved(item.getReserved() - reservedItem.getCount());
-             item.setCount(item.getCount() + reservedItem.getCount());
-             Trace.info("MW::deleteCustomer(" + id + ", " + customerId + "): "
-                     + reservedItem.getKey() + " reserved/available = " 
-                     + item.getReserved() + "/" + item.getCount());
+             //TODO: proxy dis shit
+             //Since we don't know what type of item it is, we will try one proxy at a time
+             Trace.info("MW::Attempting to unreserve " + reservedItem.getKey());
+             if (proxyFlight.rmUnreserve(id, reservedItem.getKey(), reservedItem.getCount()) == false) {
+            	 Trace.info("MW::unreserving flight failed. Trying car..");
+            	 if (proxyCar.rmUnreserve(id, reservedItem.getKey(), reservedItem.getCount()) == false) {
+            		 Trace.info("MW::unreserving car failed. Trying room..");
+            		 if (proxyRoom.rmUnreserve(id, reservedItem.getKey(), reservedItem.getCount()) == false) {
+            			 Trace.info("MW::fail to cancel reservation for room too. Wah");
+            		 }
+            	 }
+             }
          }
          // Remove the customer from the storage.
          removeData(id, cust.getKey());
@@ -423,7 +433,9 @@ public MiddlewareImpl() {
  public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
 	 return false;
  }
-
+ public boolean rmUnreserve(int id, String key, int reservationCount) {
+	 return false;
+ }
  // Add flight reservation to this customer.  
  @Override
  public boolean reserveFlight(int id, int customerId, int flightNumber) {
@@ -433,7 +445,13 @@ public MiddlewareImpl() {
          Trace.warn("MW::reserveFlight(" + id + ", " + customerId +  ", " + flightNumber + ") failed: customer doesn't exist.");
          return false;
      } 
-     //Reserve
+     //Reserve!
+     
+     //Save reservation info to customer object
+     cust.reserve(Flight.getKey(flightNumber), String.valueOf(flightNumber), proxyFlight.getPrice(id, Flight.getKey(flightNumber)));
+     writeData(id, cust.getKey(), cust);
+     
+     //Save reservation info to resource manager
      boolean result = proxyFlight.rmReserve("flight", id, flightNumber, null);
      Trace.warn("MW::reserveFlight succeeded: " + result);
      return result;
@@ -448,7 +466,13 @@ public MiddlewareImpl() {
          Trace.warn("MW::reserveCar(" + id + ", " + customerId +  ", " + location + ") failed: customer doesn't exist.");
          return false;
      } 
-     //Reserve
+     //Reserve!
+     
+     //Save reservation info to customer object
+     cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
+     writeData(id, cust.getKey(), cust);
+     
+     //Save reservation info to resource manager
      boolean result = proxyCar.rmReserve("car", id, -1, location);
      Trace.warn("MW::reserveCar succeeded: " + result);
      return result;
@@ -463,7 +487,13 @@ public MiddlewareImpl() {
          Trace.warn("MW::reserveRoom(" + id + ", " + customerId +  ", " + location + ") failed: customer doesn't exist.");
          return false;
      } 
-     //Reserve
+     //Reserve!
+     
+     //Save reservation info to customer object
+     cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
+     writeData(id, cust.getKey(), cust);
+     
+     //Save reservation info to resource manager
      boolean result = proxyRoom.rmReserve("room", id, -1, location);
      Trace.warn("MW::reserveRoom succeeded: " + result);
      return result;

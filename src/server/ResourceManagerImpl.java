@@ -85,14 +85,19 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     
     // Query the price of an item.
     protected int queryPrice(int id, String key) {
-        Trace.info("RM::queryCarsPrice(" + id + ", " + key + ") called.");
+        Trace.info("RM::queryPrice(" + id + ", " + key + ") called.");
         ReservableItem curObj = (ReservableItem) readData(id, key);
         int value = 0; 
         if (curObj != null) {
             value = curObj.getPrice();
         }
-        Trace.info("RM::queryCarsPrice(" + id + ", " + key + ") OK: $" + value);
+        Trace.info("RM::queryPrice(" + id + ", " + key + ") OK: $" + value);
         return value;
+    }
+    
+    //Public version
+    public int getPrice(int id, String key) {
+    	return queryPrice(id, key);
     }
 
     // Reserve an item.
@@ -418,17 +423,13 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
         }
     }
     
-    @Override
-    public boolean reserveFlight(int id, int customerId, int flightNumber) {
-    	return false;
-    }
     /**
      * 
      * @param reserveType	flight, car or room
      * @param id			id 
      * @param flightNumber	flight number if applicable
      * @param location		car or room location if applicable
-     * @return	true for success, false for failure
+     * @return				true if success, else false
      */
     // Add reservation  
     public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
@@ -461,17 +462,42 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
             return true;
         }
     }
-
+    /**
+     * 
+     * @param id				id
+     * @param key				reserved item's key
+     * @param reservationCount	number of reservations for this item
+     * @return					true if successful, else false
+     */
+    // Removes a reservation
+    public boolean rmUnreserve(int id, String key, int reservationCount) {
+    	ReservableItem item = (ReservableItem) readData(id, key);
+    	if (item == null) {
+    		Trace.info("RM:: Cannot unreserve item, it does not exist: " + key);
+    		return false;
+    	}
+        item.setReserved(item.getReserved() - reservationCount);
+        item.setCount(item.getCount() + reservationCount);
+        Trace.info("RM:: item unreserved. Reserved count is now " + item.getReserved() + ", available count is now " + item.getCount());
+		return true;
+    }
+    
+    // Add flight reservation to this customer.
+    @Override
+    public boolean reserveFlight(int id, int customerId, int flightNumber) {
+    	return false;
+    }
+    
     // Add car reservation to this customer. 
     @Override
     public boolean reserveCar(int id, int customerId, String location) {
-        return reserveItem(id, customerId, Car.getKey(location), location);
+        return false;
     }
 
     // Add room reservation to this customer. 
     @Override
     public boolean reserveRoom(int id, int customerId, String location) {
-        return reserveItem(id, customerId, Room.getKey(location), location);
+        return false;
     }
     
 
