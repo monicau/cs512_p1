@@ -35,7 +35,6 @@ public class Main {
         tomcat.addWebapp("/" + serviceName, 
                 new File(deployDir + "/" + serviceName).getAbsolutePath());
         
-        
         if (serviceName.equals("mw")) {
             //Add environment entries to web.xml to create rm proxies for middleware
 	        String rmHost1 = args[3];

@@ -5,20 +5,68 @@
 
 package server;
 
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import javax.jws.WebService;
 
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class ResourceManagerImpl implements server.ws.ResourceManager {
-    
-
+	
+	AtomicReference<Messenger> messenger_ref = new AtomicReference<>();
 	
 	public ResourceManagerImpl() {
-		// TODO Auto-generated constructor stub
+		new Thread(()->{
+			try {
+				getPort(port->{
+					try {
+						messenger_ref.set(new Messenger(port));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}).start();
 	}
 	
+	void getPort(Consumer<Integer> onGetPort) throws InterruptedException{
+		System.out.println("Trying to get a port");
+		try(Socket socket = new Socket("localhost", 9090)) {
+			System.out.println("Got connection");
+			try{
+				OutputStream oos = socket.getOutputStream();
+				PrintWriter writer = new PrintWriter(oos, true);
+				writer.println("[port?]");
+				InputStream is = socket.getInputStream();
+				BufferedReader br = new BufferedReader(new InputStreamReader(is));
+				System.out.println(">>>> here");
+				String message = br.readLine();
+				System.out.println("Received port "+ message);
+				onGetPort.accept(Integer.parseInt(message));
+				return;
+			}
+			catch(Exception e){
+				System.out.println(e);
+			}
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			Thread.sleep(1000);
+			getPort(onGetPort);
+		}
+	}
 	
     protected RMMap m_itemHT = new RMMap<>();
     

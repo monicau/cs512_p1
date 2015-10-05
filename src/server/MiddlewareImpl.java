@@ -10,11 +10,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.nio.channels.AsynchronousServerSocketChannel;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
@@ -27,8 +40,16 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManager proxyRoom;
 	ResourceManagerImplService service;
 	
-public MiddlewareImpl() {
-
+	
+	BlockingQueue<Integer> remainingPorts = new LinkedBlockingQueue<>();
+	Map<Integer, Socket> resourceManagers = new ConcurrentHashMap<>();
+	Map<Integer, OutputStream> rmOOS = new ConcurrentHashMap<>();
+	Map<Integer, InputStream> rmIS = new ConcurrentHashMap<>();
+public MiddlewareImpl(){
+	System.out.println("Starting middleware");
+	remainingPorts.offer(8098);
+	remainingPorts.offer(8099);
+	remainingPorts.offer(8100);
 	String flightServiceHost = null;
 	Integer flightServicePort = null;
 	String carServiceHost = null;
@@ -69,6 +90,42 @@ public MiddlewareImpl() {
 		}
 	} catch (FileNotFoundException e) {
 		Trace.info("ERROR: File not found!");
+	}
+	
+	// We are not using services for this part so we use sockets
+	
+	try{
+		Messenger messenger = new Messenger(9090);
+		messenger.onMessage = (message, socket) -> {
+			System.out.println("Received a message");
+			try{
+				if(message.equals("[port?]")){
+					InetAddress inetAddress = socket.getInetAddress();
+					int foreignPort = socket.getPort();
+					socket.close();
+					System.out.println("Received port request");
+					Integer port = remainingPorts.poll();
+					Socket rm = new Socket(inetAddress, foreignPort);
+					resourceManagers.put(port, rm);
+					rmOOS.put(port, rm.getOutputStream());
+					rmIS.put(port, rm.getInputStream());
+					
+					PrintWriter writer = new PrintWriter(rmOOS.get(port), true);
+					System.out.println("Writing port "+port+" to rm");
+					writer.println(port+"");
+				}
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		};
+		messenger.start();
+	}
+	catch(IOException exception){
+		throw new IllegalStateException("The port 9090 is in use. Please kill that process.");
+	}
+	catch(Exception e){
+		
 	}
 	
 }
