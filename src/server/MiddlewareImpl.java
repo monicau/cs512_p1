@@ -397,12 +397,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Flight.getKey(flightNumber), String.valueOf(flightNumber), proxyFlight.getPrice(id, Flight.getKey(flightNumber)));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
      boolean result = proxyFlight.reserveItem("flight", id, flightNumber, null);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Flight.getKey(flightNumber), String.valueOf(flightNumber), proxyFlight.getPrice(id, Flight.getKey(flightNumber)));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveFlight succeeded: " + result);
      return result;
  }
@@ -418,12 +419,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
      boolean result = proxyCar.reserveItem("car", id, -1, location);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveCar succeeded: " + result);
      return result;
  }
@@ -439,12 +441,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
      boolean result = proxyRoom.reserveItem("room", id, -1, location);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveRoom succeeded: " + result);
      return result;
  }
