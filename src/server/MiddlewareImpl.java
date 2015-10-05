@@ -502,9 +502,39 @@ public MiddlewareImpl() {
 
  // Reserve an itinerary.
  @Override
- public boolean reserveItinerary(int id, int customerId, Vector flightNumbers,
-                                 String location, boolean car, boolean room) {
-     return false;
+ public boolean reserveItinerary(int id, int customerId, Vector flightNumbers, String location, boolean car, boolean room) {
+	 Trace.info("MW::reserve itinerary");
+	 for (Object element: flightNumbers) {
+		 String flightNumberString= (String) element;
+		 int flightNumber = Integer.parseInt(flightNumberString);
+		 if (queryFlight(id,flightNumber)<1) {
+			 return false;
+		 }
+	 }
+	 if (car && queryCars(id, location)<1) {
+		 Trace.info("MW::No free cars at " + location + " to rent.");
+		 return false;
+	 }
+	 if (room && queryRooms(id, location)<1) {
+		 Trace.info("MW::No free rooms at " + location + " to rent.");
+		 return false;
+	 }
+	 //Reach here if reservable
+	 if (car) {
+		 Trace.info("MW::Reserving car at" + location);
+		 reserveCar(id, customerId, location);
+	 }
+	 if (room) {
+		 Trace.info("MW::Reserving room at" + location);
+		 reserveRoom(id, customerId, location);
+	 }
+	 for (Object element: flightNumbers) {
+		 String flightNumberString= (String) element;
+		 int flightNumber = Integer.parseInt(flightNumberString);
+		 Trace.info("MW::Reserving flight: " + flightNumber);
+		 reserveFlight(id, customerId, flightNumber);
+	 }
+     return true;
  }
 
 }
