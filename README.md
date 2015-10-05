@@ -5,7 +5,7 @@
 - Apache Ant
 
 ###Resource Managers
-```ant rm1 -Dservice.rm.host=HOSTNAME -Dservice.rm.port=PORT```
+```ant rm1 -Dservice.rm1.host=HOSTNAME -Dservice.rm1.port=PORT```
 
 ```ant rm2 -Dservice.rm2.host=HOSTNAME -Dservice.rm2.port=PORT```
 
@@ -24,7 +24,7 @@ Access via: http://HOSTNAME:PORT/rm/rm
 
 will launch middleware and it will use default values to find the resource managers.  By default, middleware's port is 8080.
 
-```ant server -Dservice.rm.host=HOSTNAME -Dservice.rm.port=PORT -Dservice.rm2.host=HOSTNAME -Dservice.rm2.port=PORT -Dservice.rm3.host=HOSTNAME -Dservice.rm3.port=PORT```
+```ant server -Dservice.rm1.host=HOSTNAME -Dservice.rm1.port=PORT -Dservice.rm2.host=HOSTNAME -Dservice.rm2.port=PORT -Dservice.rm3.host=HOSTNAME -Dservice.rm3.port=PORT```
 
 will launch middleware with specified resource manager hostnames and port numbers.
 
