@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 
+
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManager proxyFlight;
@@ -100,27 +101,9 @@ public MiddlewareImpl() {
  
  // Basic operations on ReservableItem //
  
- // Delete the entire item.
+ // Delete the entire item. Method for resource manager only.
  protected boolean deleteItem(int id, String key) {
-     Trace.info("MW::deleteItem(" + id + ", " + key + ") called.");
-     ReservableItem curObj = (ReservableItem) readData(id, key);
-     // Check if there is such an item in the storage.
-     if (curObj == null) {
-         Trace.warn("MW::deleteItem(" + id + ", " + key + ") failed: " 
-                 + " item doesn't exist.");
-         return false;
-     } else {
-         if (curObj.getReserved() == 0) {
-             removeData(id, curObj.getKey());
-             Trace.info("MW::deleteItem(" + id + ", " + key + ") OK.");
-             return true;
-         }
-         else {
-             Trace.info("MW::deleteItem(" + id + ", " + key + ") failed: "
-                     + "some customers have reserved it.");
-             return false;
-         }
-     }
+     return false;
  }
  
  // Query the number of available seats/rooms/cars.
@@ -150,44 +133,6 @@ public MiddlewareImpl() {
  //Public version
  public int getPrice(int id, String key) {
  	return queryPrice(id, key);
- }
-
- // Reserve an item.
- protected boolean reserveItem(int id, int customerId, 
-                               String key, String location) {
-     Trace.info("MW::reserveItem(" + id + ", " + customerId + ", " 
-             + key + ", " + location + ") called.");
-     // Read customer object if it exists (and read lock it).
-     Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-     if (cust == null) {
-         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
-                + key + ", " + location + ") failed: customer doesn't exist.");
-         return false;
-     } 
-     
-     // Check if the item is available.
-     ReservableItem item = (ReservableItem) readData(id, key);
-     if (item == null) {
-         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
-                 + key + ", " + location + ") failed: item doesn't exist.");
-         return false;
-     } else if (item.getCount() == 0) {
-         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
-                 + key + ", " + location + ") failed: no more items.");
-         return false;
-     } else {
-         // Do reservation.
-         cust.reserve(key, location, item.getPrice());
-         writeData(id, cust.getKey(), cust);
-         
-         // Decrease the number of available items in the storage.
-         item.setCount(item.getCount() - 1);
-         item.setReserved(item.getReserved() + 1);
-         
-         Trace.warn("MW::reserveItem(" + id + ", " + customerId + ", " 
-                 + key + ", " + location + ") OK.");
-         return true;
-     }
  }
  
  
@@ -331,9 +276,12 @@ public MiddlewareImpl() {
  public int newCustomer(int id) {
      Trace.info("INFO: MW::newCustomer(" + id + ") called.");
      // Generate a globally unique Id for the new customer.
-     int customerId = Integer.parseInt(String.valueOf(id) +
+     int customerId;
+     synchronized(this) {
+     customerId = Integer.parseInt(String.valueOf(id) +
              String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
              String.valueOf(Math.round(Math.random() * 100 + 1)));
+     }
      Customer cust = new Customer(customerId);
      writeData(id, cust.getKey(), cust);
      Trace.info("MW::newCustomer(" + id + ") OK: " + customerId);
@@ -384,7 +332,7 @@ public MiddlewareImpl() {
             	 if (proxyCar.rmUnreserve(id, reservedItem.getKey(), reservedItem.getCount()) == false) {
             		 Trace.info("MW::unreserving car failed. Trying room..");
             		 if (proxyRoom.rmUnreserve(id, reservedItem.getKey(), reservedItem.getCount()) == false) {
-            			 Trace.info("MW::fail to cancel reservation for room too. Wah");
+            			 Trace.info("MW::fail to cancel reservation for room too.");
             		 }
             	 }
              }
@@ -430,9 +378,11 @@ public MiddlewareImpl() {
      }
  }
 
- public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
+ //Method for resource manager only.
+ public boolean reserveItem(String reserveType, int id, int flightNumber, String location) {
 	 return false;
  }
+ //Method for resource manager only.
  public boolean rmUnreserve(int id, String key, int reservationCount) {
 	 return false;
  }
@@ -447,12 +397,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Flight.getKey(flightNumber), String.valueOf(flightNumber), proxyFlight.getPrice(id, Flight.getKey(flightNumber)));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
-     boolean result = proxyFlight.rmReserve("flight", id, flightNumber, null);
+     boolean result = proxyFlight.reserveItem("flight", id, flightNumber, null);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Flight.getKey(flightNumber), String.valueOf(flightNumber), proxyFlight.getPrice(id, Flight.getKey(flightNumber)));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveFlight succeeded: " + result);
      return result;
  }
@@ -468,12 +419,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
-     boolean result = proxyCar.rmReserve("car", id, -1, location);
+     boolean result = proxyCar.reserveItem("car", id, -1, location);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveCar succeeded: " + result);
      return result;
  }
@@ -489,12 +441,13 @@ public MiddlewareImpl() {
      } 
      //Reserve!
      
-     //Save reservation info to customer object
-     cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
-     writeData(id, cust.getKey(), cust);
-     
      //Save reservation info to resource manager
-     boolean result = proxyRoom.rmReserve("room", id, -1, location);
+     boolean result = proxyRoom.reserveItem("room", id, -1, location);
+     if (result == true) {
+    	//Save reservation info to customer object
+         cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
+         writeData(id, cust.getKey(), cust);
+     }
      Trace.warn("MW::reserveRoom succeeded: " + result);
      return result;
  }
@@ -508,6 +461,7 @@ public MiddlewareImpl() {
 		 String flightNumberString= (String) element;
 		 int flightNumber = Integer.parseInt(flightNumberString);
 		 if (queryFlight(id,flightNumber)<1) {
+			 Trace.info("MW::No free seats on flight " + flightNumberString);
 			 return false;
 		 }
 	 }
@@ -519,21 +473,49 @@ public MiddlewareImpl() {
 		 Trace.info("MW::No free rooms at " + location + " to rent.");
 		 return false;
 	 }
-	 //Reach here if reservable
+	 //Now try to reserve all the items
 	 if (car) {
 		 Trace.info("MW::Reserving car at" + location);
-		 reserveCar(id, customerId, location);
+		 boolean reserveCarResult = reserveCar(id, customerId, location);
+		 //return false now if reserving car failed
+		 if (reserveCarResult == false) return false;
 	 }
 	 if (room) {
 		 Trace.info("MW::Reserving room at" + location);
-		 reserveRoom(id, customerId, location);
+		 boolean reserveRoomResult = reserveRoom(id, customerId, location);
+		 if (reserveRoomResult == false) {
+			 //Cancel car reservation and return false
+			 proxyCar.rmUnreserve(id, Car.getKey(location), 1);
+			 return false;
+		 }
 	 }
-	 for (Object element: flightNumbers) {
-		 String flightNumberString= (String) element;
+	 boolean[] reserveFlightResult = new boolean[flightNumbers.size()];
+	 for (boolean flight : reserveFlightResult) {
+		 flight = false;
+	 }
+	 boolean reserveFlightSuccess = true;
+	 for (int i=0; i<flightNumbers.size(); i++) {
+		 String flightNumberString= (String) flightNumbers.get(i);
 		 int flightNumber = Integer.parseInt(flightNumberString);
 		 Trace.info("MW::Reserving flight: " + flightNumber);
-		 reserveFlight(id, customerId, flightNumber);
+		 reserveFlightResult[i] = reserveFlight(id, customerId, flightNumber);
+		 //Break out of reserving flights if this flight reservation failed
+		 if (reserveFlightResult[i]==false) {
+			 reserveFlightSuccess = false;
+			 break;
+		 }
 	 }
+	 if (reserveFlightSuccess == false) {
+		 //Roll back any successful flight reservations
+		 for (int i=0; i<reserveFlightResult.length; i++) {
+			 if (reserveFlightResult[i]==true) {
+				 int flightNum = Integer.parseInt((String) flightNumbers.get(i));
+				 proxyFlight.rmUnreserve(id, Flight.getKey(flightNum), 1);
+			 }
+		 }
+		 return false;
+	 }
+	 
      return true;
  }
 
