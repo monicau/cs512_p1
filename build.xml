@@ -7,10 +7,10 @@
     <property name="service.port" value="8080"/>
     <property name="service.url_pattern" value="service"/> <!-- see sun-jaxws.xml-->
 	
-	<property name="service.rm.name" value="rm"/>
-	<property name="service.rm.host" value="localhost"/>
-    <property name="service.rm.port" value="8088"/>
-    <property name="service.rm.url_pattern" value="rm"/>
+	<property name="service.rm1.name" value="rm"/>
+	<property name="service.rm1.host" value="localhost"/>
+    <property name="service.rm1.port" value="8088"/>
+    <property name="service.rm1.url_pattern" value="rm"/>
     
 	<property name="service.rm2.host" value="localhost"/>
     <property name="service.rm2.port" value="8089"/>
@@ -58,7 +58,7 @@
                 keep="true"
                 destdir="${basedir}/build/classes"
                 package="server"
-                wsdl="http://${service.rm.host}:${service.rm.port}/${service.rm.name}/${service.rm.url_pattern}?wsdl">
+                wsdl="http://${service.rm1.host}:${service.rm1.port}/${service.rm1.name}/${service.rm1.url_pattern}?wsdl">
         </wsimport>
     </target>
 
@@ -131,8 +131,8 @@
             <arg value="${service.name}"/>
             <arg value="${service.port}"/>
             <arg value="${basedir}/webapps"/>
-            <arg value="${service.rm.host}"/>
-            <arg value="${service.rm.port}"/>
+            <arg value="${service.rm1.host}"/>
+            <arg value="${service.rm1.port}"/>
             <arg value="${service.rm2.host}"/>
             <arg value="${service.rm2.port}"/>
             <arg value="${service.rm3.host}"/>
@@ -142,7 +142,7 @@
 
     <target name="create-war-rm">
         <war 
-            warfile="${basedir}/build/war/${service.rm.name}.war" 
+            warfile="${basedir}/build/war/${service.rm1.name}.war" 
             webxml="etc/web.xml">
             <webinf dir="${basedir}/etc" includes="sun-jaxws.xml"/>
             <zipfileset
@@ -154,15 +154,15 @@
     </target>
     
     <target name="deploy-war-rm">
-        <delete dir="${basedir}/webapps/${service.rm.name}" 
+        <delete dir="${basedir}/webapps/${service.rm1.name}" 
             includeEmptyDirs="true"/>
-        <mkdir dir="${basedir}/webapps/${service.rm.name}"/>        
+        <mkdir dir="${basedir}/webapps/${service.rm1.name}"/>        
         <unzip 
-            src="${basedir}/build/war/${service.rm.name}.war"
-            dest="${basedir}/webapps/${service.rm.name}"/>
+            src="${basedir}/build/war/${service.rm1.name}.war"
+            dest="${basedir}/webapps/${service.rm1.name}"/>
     </target>
     
-    <target name="start-tomcat-rm" depends="build-main">
+    <target name="start-tomcat-rm1" depends="build-main">
         <echo message="Starting Tomcat and deploying service ... "/>
         <java fork="true" classname="main.Main">
             <classpath>
@@ -170,8 +170,8 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm.name}"/>
-            <arg value="${service.rm.port}"/>
+            <arg value="${service.rm1.name}"/>
+            <arg value="${service.rm1.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
     </target>
@@ -184,7 +184,7 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm.name}"/>
+            <arg value="${service.rm1.name}"/>
             <arg value="${service.rm2.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
@@ -198,7 +198,7 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm.name}"/>
+            <arg value="${service.rm1.name}"/>
             <arg value="${service.rm3.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
@@ -214,13 +214,13 @@
         <antcall target="start-tomcat"/>
     </target>
     
-    <target name="rm">
+    <target name="rm1">
         <antcall target="clean"/>
         <antcall target="setup" />
         <antcall target="build-server-rm"/>
     	<antcall target="create-war-rm"/>
     	<antcall target="deploy-war-rm"/>
-    	<antcall target="start-tomcat-rm"/>
+    	<antcall target="start-tomcat-rm1"/>
     </target>
     
     <target name="rm2">
@@ -241,7 +241,19 @@
     	<antcall target="start-tomcat-rm3"/>
     </target>
     
-
+	<target name="rm">
+		<antcall target="clean"/>
+		<antcall target="setup" />
+		<antcall target="build-server-rm"/>
+		<antcall target="create-war-rm"/>
+		<antcall target="deploy-war-rm"/>
+		<parallel threadCount="3">
+			<antcall target="start-tomcat-rm1"/>
+			<antcall target="start-tomcat-rm2"/>
+			<antcall target="start-tomcat-rm3"/>		
+		</parallel>
+	</target>	
+	
     <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
         <classpath refid="jaxws.classpath"/>
     </taskdef>

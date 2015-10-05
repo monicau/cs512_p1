@@ -13,7 +13,14 @@ import javax.jws.WebService;
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class ResourceManagerImpl implements server.ws.ResourceManager {
     
-    protected RMHashtable m_itemHT = new RMHashtable();
+
+	
+	public ResourceManagerImpl() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+    protected RMMap m_itemHT = new RMMap<>();
     
     
     // Basic operations on RMItem //
@@ -305,7 +312,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     }
 
     // Method for middleware only.
-    public RMHashtable getCustomerReservations(int id, int customerId) {
+    public RMMap getCustomerReservations(int id, int customerId) {
     	return null;
     }
 
