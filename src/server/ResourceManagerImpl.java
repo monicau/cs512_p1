@@ -51,23 +51,26 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     // Delete the entire item.
     protected boolean deleteItem(int id, String key) {
         Trace.info("RM::deleteItem(" + id + ", " + key + ") called.");
+        //Synchronize delete in case someone reserves same item while we are trying to delete it
         ReservableItem curObj = (ReservableItem) readData(id, key);
-        // Check if there is such an item in the storage.
-        if (curObj == null) {
-            Trace.warn("RM::deleteItem(" + id + ", " + key + ") failed: " 
-                    + " item doesn't exist.");
-            return false;
-        } else {
-            if (curObj.getReserved() == 0) {
-                removeData(id, curObj.getKey());
-                Trace.info("RM::deleteItem(" + id + ", " + key + ") OK.");
-                return true;
-            }
-            else {
-                Trace.info("RM::deleteItem(" + id + ", " + key + ") failed: "
-                        + "some customers have reserved it.");
-                return false;
-            }
+        synchronized(curObj) {
+	        // Check if there is such an item in the storage.
+	        if (curObj == null) {
+	            Trace.warn("RM::deleteItem(" + id + ", " + key + ") failed: " 
+	                    + " item doesn't exist.");
+	            return false;
+	        } else {
+	            if (curObj.getReserved() == 0) {
+	                removeData(id, curObj.getKey());
+	                Trace.info("RM::deleteItem(" + id + ", " + key + ") OK.");
+	                return true;
+	            }
+	            else {
+	                Trace.info("RM::deleteItem(" + id + ", " + key + ") failed: "
+	                        + "some customers have reserved it.");
+	                return false;
+	            }
+	        }
         }
     }
     
@@ -99,47 +102,6 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     public int getPrice(int id, String key) {
     	return queryPrice(id, key);
     }
-
-    // Reserve an item.
-    protected boolean reserveItem(int id, int customerId, 
-                                  String key, String location) {
-        Trace.info("RM::reserveItem(" + id + ", " + customerId + ", " 
-                + key + ", " + location + ") called.");
-        // Read customer object if it exists (and read lock it).
-        Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-        if (cust == null) {
-            Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
-                   + key + ", " + location + ") failed: customer doesn't exist.");
-            return false;
-        } 
-        
-        // Check if the item is available.
-        ReservableItem item = (ReservableItem) readData(id, key);
-        if (item == null) {
-            Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
-                    + key + ", " + location + ") failed: item doesn't exist.");
-            return false;
-        } else if (item.getCount() == 0) {
-            Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
-                    + key + ", " + location + ") failed: no more items.");
-            return false;
-        } else {
-            // Do reservation.
-            cust.reserve(key, location, item.getPrice());
-            writeData(id, cust.getKey(), cust);
-            
-            // Decrease the number of available items in the storage.
-            item.setCount(item.getCount() - 1);
-            item.setReserved(item.getReserved() + 1);
-            
-            Trace.warn("RM::reserveItem(" + id + ", " + customerId + ", " 
-                    + key + ", " + location + ") OK.");
-            return true;
-        }
-    }
-    
-    //Set count
-    
     
     // Flight operations //
     
@@ -147,7 +109,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     // Note: if flightPrice <= 0 and the flight already exists, it maintains 
     // its current price.
     @Override
-    public boolean addFlight(int id, int flightNumber, 
+    synchronized public boolean addFlight(int id, int flightNumber, 
                              int numSeats, int flightPrice) {
         Trace.info("RM::addFlight(" + id + ", " + flightNumber 
                 + ", $" + flightPrice + ", " + numSeats + ") called.");
@@ -159,13 +121,13 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
             Trace.info("RM::addFlight(" + id + ", " + flightNumber 
                     + ", $" + flightPrice + ", " + numSeats + ") OK.");
         } else {
-            // Add seats to existing flight and update the price.
-            curObj.setCount(curObj.getCount() + numSeats);
-            if (flightPrice > 0) {
-                curObj.setPrice(flightPrice);
-            }
-            writeData(id, curObj.getKey(), curObj);
-            Trace.info("RM::addFlight(" + id + ", " + flightNumber 
+        	// Add seats to existing flight and update the price.
+        	curObj.setCount(curObj.getCount() + numSeats);
+        	if (flightPrice > 0) {
+        		curObj.setPrice(flightPrice);
+        	}
+        	writeData(id, curObj.getKey(), curObj);
+        	Trace.info("RM::addFlight(" + id + ", " + flightNumber 
                     + ", $" + flightPrice + ", " + numSeats + ") OK: "
                     + "seats = " + curObj.getCount() + ", price = $" + flightPrice);
         }
@@ -231,7 +193,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     // Note: if price <= 0 and the car location already exists, it maintains 
     // its current price.
     @Override
-    public boolean addCars(int id, String location, int numCars, int carPrice) {
+    synchronized public boolean addCars(int id, String location, int numCars, int carPrice) {
         Trace.info("RM::addCars(" + id + ", " + location + ", " 
                 + numCars + ", $" + carPrice + ") called.");
         Car curObj = (Car) readData(id, Car.getKey(location));
@@ -243,11 +205,11 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
                     + numCars + ", $" + carPrice + ") OK.");
         } else {
             // Add count to existing object and update price.
-            curObj.setCount(curObj.getCount() + numCars);
-            if (carPrice > 0) {
-                curObj.setPrice(carPrice);
-            }
-            writeData(id, curObj.getKey(), curObj);
+        	curObj.setCount(curObj.getCount() + numCars);
+        	if (carPrice > 0) {
+        		curObj.setPrice(carPrice);
+        	}
+        	writeData(id, curObj.getKey(), curObj);
             Trace.info("RM::addCars(" + id + ", " + location + ", " 
                     + numCars + ", $" + carPrice + ") OK: " 
                     + "cars = " + curObj.getCount() + ", price = $" + carPrice);
@@ -280,7 +242,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
     // Note: if price <= 0 and the room location already exists, it maintains 
     // its current price.
     @Override
-    public boolean addRooms(int id, String location, int numRooms, int roomPrice) {
+    synchronized public boolean addRooms(int id, String location, int numRooms, int roomPrice) {
         Trace.info("RM::addRooms(" + id + ", " + location + ", " 
                 + numRooms + ", $" + roomPrice + ") called.");
         Room curObj = (Room) readData(id, Room.getKey(location));
@@ -325,102 +287,32 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 
     // Customer operations //
 
+    //Method for middleware only.
     @Override
     public int newCustomer(int id) {
-        Trace.info("INFO: RM::newCustomer(" + id + ") called.");
-        // Generate a globally unique Id for the new customer.
-        int customerId = Integer.parseInt(String.valueOf(id) +
-                String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
-                String.valueOf(Math.round(Math.random() * 100 + 1)));
-        Customer cust = new Customer(customerId);
-        writeData(id, cust.getKey(), cust);
-        Trace.info("RM::newCustomer(" + id + ") OK: " + customerId);
-        return customerId;
+        return -1;
     }
 
-    // This method makes testing easier.
-    @Override
+    // Method for middleware only.    @Override
     public boolean newCustomerId(int id, int customerId) {
-        Trace.info("INFO: RM::newCustomer(" + id + ", " + customerId + ") called.");
-        Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-        if (cust == null) {
-            cust = new Customer(customerId);
-            writeData(id, cust.getKey(), cust);
-            Trace.info("INFO: RM::newCustomer(" + id + ", " + customerId + ") OK.");
-            return true;
-        } else {
-            Trace.info("INFO: RM::newCustomer(" + id + ", " + 
-                    customerId + ") failed: customer already exists.");
-            return false;
-        }
+        return false;
     }
 
-    // Delete customer from the database. 
+    // Method for middleware only.
     @Override
     public boolean deleteCustomer(int id, int customerId) {
-        Trace.info("RM::deleteCustomer(" + id + ", " + customerId + ") called.");
-        Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-        if (cust == null) {
-            Trace.warn("RM::deleteCustomer(" + id + ", " 
-                    + customerId + ") failed: customer doesn't exist.");
-            return false;
-        } else {            
-            // Increase the reserved numbers of all reservable items that 
-            // the customer reserved. 
-            RMHashtable reservationHT = cust.getReservations();
-            for (Enumeration e = reservationHT.keys(); e.hasMoreElements();) {        
-                String reservedKey = (String) (e.nextElement());
-                ReservedItem reservedItem = cust.getReservedItem(reservedKey);
-                Trace.info("RM::deleteCustomer(" + id + ", " + customerId + "): " 
-                        + "deleting " + reservedItem.getCount() + " reservations "
-                        + "for item " + reservedItem.getKey());
-                ReservableItem item = 
-                        (ReservableItem) readData(id, reservedItem.getKey());
-                item.setReserved(item.getReserved() - reservedItem.getCount());
-                item.setCount(item.getCount() + reservedItem.getCount());
-                Trace.info("RM::deleteCustomer(" + id + ", " + customerId + "): "
-                        + reservedItem.getKey() + " reserved/available = " 
-                        + item.getReserved() + "/" + item.getCount());
-            }
-            // Remove the customer from the storage.
-            removeData(id, cust.getKey());
-            Trace.info("RM::deleteCustomer(" + id + ", " + customerId + ") OK.");
-            return true;
-        }
+        return false;
     }
 
-    // Return data structure containing customer reservation info. 
-    // Returns null if the customer doesn't exist. 
-    // Returns empty RMHashtable if customer exists but has no reservations.
+    // Method for middleware only.
     public RMHashtable getCustomerReservations(int id, int customerId) {
-        Trace.info("RM::getCustomerReservations(" + id + ", " 
-                + customerId + ") called.");
-        Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-        if (cust == null) {
-            Trace.info("RM::getCustomerReservations(" + id + ", " 
-                    + customerId + ") failed: customer doesn't exist.");
-            return null;
-        } else {
-            return cust.getReservations();
-        }
+    	return null;
     }
 
-    // Return a bill.
+    // Method for middleware only.
     @Override
     public String queryCustomerInfo(int id, int customerId) {
-        Trace.info("RM::queryCustomerInfo(" + id + ", " + customerId + ") called.");
-        Customer cust = (Customer) readData(id, Customer.getKey(customerId));
-        if (cust == null) {
-            Trace.warn("RM::queryCustomerInfo(" + id + ", " 
-                    + customerId + ") failed: customer doesn't exist.");
-            // Returning an empty bill means that the customer doesn't exist.
-            return "";
-        } else {
-            String s = cust.printBill();
-            Trace.info("RM::queryCustomerInfo(" + id + ", " + customerId + "): \n");
-            System.out.println(s);
-            return s;
-        }
+        return "No customer information on this server.";
     }
     
     /**
@@ -432,7 +324,8 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
      * @return				true if success, else false
      */
     // Add reservation  
-    public boolean rmReserve(String reserveType, int id, int flightNumber, String location) {
+    @Override
+    public boolean reserveItem(String reserveType, int id, int flightNumber, String location) {
     	String key = null;
     	if (reserveType.toLowerCase().equals("flight")) {
     		location = String.valueOf(flightNumber);        
@@ -455,9 +348,10 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
         } else {
             // Do reservation.
             // Decrease the number of available items in the storage.
-            item.setCount(item.getCount() - 1);
-            item.setReserved(item.getReserved() + 1);
-            
+        	synchronized(item) {
+	            item.setCount(item.getCount() - 1);
+	            item.setReserved(item.getReserved() + 1);
+        	}
             Trace.warn("RM::rmReserve(" + reserveType + ", " + id + ", " + Integer.toString(flightNumber) + ", " + location + ") OK.");
             return true;
         }

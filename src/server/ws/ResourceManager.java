@@ -128,7 +128,7 @@ public interface ResourceManager {
     
     /* Resource manager's reserve method */
     @WebMethod
-    public boolean rmReserve(String reserveType, int id, int flightNumber, String location);
+    public boolean reserveItem(String reserveType, int id, int flightNumber, String location);
 
     /* Resource manager's unreserve method */
     @WebMethod
