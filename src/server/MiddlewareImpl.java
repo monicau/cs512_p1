@@ -72,7 +72,7 @@ public MiddlewareImpl() {
 	}
 	
 }
- protected RMHashtable m_itemHT = new RMHashtable();
+ protected RMMap m_itemHT = new RMMap<>();
  
  
  // Basic operations on RMItem //
@@ -317,7 +317,7 @@ public MiddlewareImpl() {
      } else {            
          // Increase the reserved numbers of all reservable items that 
          // the customer reserved. 
-         RMHashtable reservationHT = cust.getReservations();
+         RMMap reservationHT = cust.getReservations();
          for (Enumeration e = reservationHT.keys(); e.hasMoreElements();) {        
              String reservedKey = (String) (e.nextElement());
              ReservedItem reservedItem = cust.getReservedItem(reservedKey);
@@ -346,8 +346,8 @@ public MiddlewareImpl() {
 
  // Return data structure containing customer reservation info. 
  // Returns null if the customer doesn't exist. 
- // Returns empty RMHashtable if customer exists but has no reservations.
- public RMHashtable getCustomerReservations(int id, int customerId) {
+ // Returns empty RMMap if customer exists but has no reservations.
+ public RMMap getCustomerReservations(int id, int customerId) {
      Trace.info("MW::getCustomerReservations(" + id + ", " 
              + customerId + ") called.");
      Customer cust = (Customer) readData(id, Customer.getKey(customerId));
