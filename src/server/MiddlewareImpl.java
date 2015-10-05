@@ -423,7 +423,7 @@ public MiddlewareImpl() {
      boolean result = proxyCar.reserveItem("car", id, -1, location);
      if (result == true) {
     	//Save reservation info to customer object
-         cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, location));
+         cust.reserve(Car.getKey(location), location, proxyCar.getPrice(id, Car.getKey(location)));
          writeData(id, cust.getKey(), cust);
      }
      Trace.warn("MW::reserveCar succeeded: " + result);
@@ -445,7 +445,7 @@ public MiddlewareImpl() {
      boolean result = proxyRoom.reserveItem("room", id, -1, location);
      if (result == true) {
     	//Save reservation info to customer object
-         cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, location));
+         cust.reserve(Room.getKey(location), location, proxyRoom.getPrice(id, Room.getKey(location)));
          writeData(id, cust.getKey(), cust);
      }
      Trace.warn("MW::reserveRoom succeeded: " + result);
