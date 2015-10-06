@@ -22,6 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -41,15 +42,12 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManagerImplService service;
 	
 	
-	BlockingQueue<Integer> remainingPorts = new LinkedBlockingQueue<>();
+	int next_port = 8098;
 	Map<Integer, Socket> resourceManagers = new ConcurrentHashMap<>();
 	Map<Integer, OutputStream> rmOOS = new ConcurrentHashMap<>();
 	Map<Integer, InputStream> rmIS = new ConcurrentHashMap<>();
 public MiddlewareImpl(){
 	System.out.println("Starting middleware");
-	remainingPorts.offer(8098);
-	remainingPorts.offer(8099);
-	remainingPorts.offer(8100);
 	String flightServiceHost = null;
 	Integer flightServicePort = null;
 	String carServiceHost = null;
@@ -102,13 +100,11 @@ public MiddlewareImpl(){
 				if(message.equals("[port?]")){
 					InetAddress inetAddress = socket.getInetAddress();
 					int foreignPort = socket.getPort();
-					socket.close();
 					System.out.println("Received port request");
-					Integer port = remainingPorts.poll();
-					Socket rm = new Socket(inetAddress, foreignPort);
-					resourceManagers.put(port, rm);
-					rmOOS.put(port, rm.getOutputStream());
-					rmIS.put(port, rm.getInputStream());
+					int port = next_port++;
+					resourceManagers.put(port, socket);
+					rmOOS.put(port, socket.getOutputStream());
+					rmIS.put(port, socket.getInputStream());
 					
 					PrintWriter writer = new PrintWriter(rmOOS.get(port), true);
 					System.out.println("Writing port "+port+" to rm");
