@@ -2,7 +2,7 @@
 <project basedir="." default="help" name="project">
 
 
-	<property name="services" value=":)"/>
+	<property name="services" value="no"/>
 	<property name="middleware.ip" value="localhost" />
 	
     <!-- visit http://localhost:8080/mw/service to see available services -->
@@ -297,9 +297,11 @@
                 <path refid="jaxws.classpath"/>
                 <pathelement location="${basedir}/build/classes"/>
             </classpath>
+        	<arg value="${services}" />
             <arg value="${service.name}"/>
             <arg value="${service.host}"/>
             <arg value="${service.port}"/>
+        	<arg value="${middleware.ip}"/>
         </java>
     </target>
 

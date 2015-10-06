@@ -14,19 +14,23 @@ public class Client extends WSClient {
     public static void main(String[] args) {
         try {
         
-            if (args.length != 3) {
-                System.out.println("Usage: MyClient <service-name> " 
-                        + "<service-host> <service-port>");
+            if (args.length != 5) {
+                System.out.println("Usage: MyClient <services> <service-name> " 
+                        + "<service-host> <service-port> <middleware.ip>");
                 System.exit(-1);
             }
-            
-            String serviceName = args[0];
-            String serviceHost = args[1];
-            int servicePort = Integer.parseInt(args[2]);
-            
-            Client client = new Client(serviceName, serviceHost, servicePort);
-            
-            client.run();
+            if(args[0].equals("yes")){
+            	String serviceName = args[1];
+                String serviceHost = args[2];
+                int servicePort = Integer.parseInt(args[3]);
+                
+                Client client = new Client(serviceName, serviceHost, servicePort);
+                
+                client.run();
+            }
+            else{
+            	String middleware_ip = args[4];
+            }
             
         } catch(Exception e) {
             e.printStackTrace();
