@@ -11,15 +11,21 @@ public class Main {
     public static void main(String[] args) 
     throws Exception {
     
-        if (args.length != 3 && args.length != 9) {
+        if (args.length != 5 && args.length != 11) {
             System.out.println(
-                "Usage: java Main <service-name> <service-port> <deploy-dir> [<rm1-host> <rm1-port> <rm2-host> <rm2-port> <rm3-host> <rm3-port>]");
+                "Usage: java Main <use_services> <middleware ip> <service-name> <service-port> <deploy-dir> [<rm1-host> <rm1-port> <rm2-host> <rm2-port> <rm3-host> <rm3-port>]");
             System.exit(-1);
         }
+        
+        String use_services = args[0];
+        String middleware_ip = args[1];
+        try(PrintWriter writer = new PrintWriter("config.txt", "UTF-8")){
+        	writer.println(use_services+" "+middleware_ip);
+        }
     
-        String serviceName = args[0];
-        int port = Integer.parseInt(args[1]);
-        String deployDir = args[2];
+        String serviceName = args[2];
+        int port = Integer.parseInt(args[3]);
+        String deployDir = args[4];
         
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -37,12 +43,12 @@ public class Main {
         
         if (serviceName.equals("mw")) {
             //Add environment entries to web.xml to create rm proxies for middleware
-	        String rmHost1 = args[3];
-	        int rmPort1 = Integer.parseInt(args[4]);
-	        String rmHost2 = args[5];
-	        int rmPort2 = Integer.parseInt(args[6]);
-	        String rmHost3 = args[7];
-	        int rmPort3 = Integer.parseInt(args[8]);
+	        String rmHost1 = args[5];
+	        int rmPort1 = Integer.parseInt(args[6]);
+	        String rmHost2 = args[7];
+	        int rmPort2 = Integer.parseInt(args[8]);
+	        String rmHost3 = args[9];
+	        int rmPort3 = Integer.parseInt(args[10]);
 	        
 	        PrintWriter writer = new PrintWriter("rm.txt", "UTF-8");
 	        writer.println(rmHost1);

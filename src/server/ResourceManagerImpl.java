@@ -44,14 +44,12 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 	void getPort(Consumer<Integer> onGetPort) throws InterruptedException{
 		System.out.println("Trying to get a port");
 		try(Socket socket = new Socket("localhost", 9090)) {
-			System.out.println("Got connection");
 			try{
 				OutputStream oos = socket.getOutputStream();
 				PrintWriter writer = new PrintWriter(oos, true);
 				writer.println("[port?]");
 				InputStream is = socket.getInputStream();
 				BufferedReader br = new BufferedReader(new InputStreamReader(is));
-				System.out.println(">>>> here");
 				String message = br.readLine();
 				System.out.println("Received port "+ message);
 				onGetPort.accept(Integer.parseInt(message));

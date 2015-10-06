@@ -107,7 +107,7 @@ public MiddlewareImpl(){
 					rmIS.put(port, socket.getInputStream());
 					
 					PrintWriter writer = new PrintWriter(rmOOS.get(port), true);
-					System.out.println("Writing port "+port+" to rm");
+					System.out.println("Giving out port "+port+" to "+inetAddress+":"+foreignPort);
 					writer.println(port+"");
 				}
 			}
@@ -121,7 +121,7 @@ public MiddlewareImpl(){
 		throw new IllegalStateException("The port 9090 is in use. Please kill that process.");
 	}
 	catch(Exception e){
-		
+		e.printStackTrace();
 	}
 	
 }

@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="help" name="project">
 
+
+	<property name="services" value=":)"/>
+	<property name="middleware.ip" value="localhost" />
+	
     <!-- visit http://localhost:8080/mw/service to see available services -->
 	<property name="service.name" value="mw"/>
     <property name="service.host" value="localhost"/>
     <property name="service.port" value="8080"/>
     <property name="service.url_pattern" value="service"/> <!-- see sun-jaxws.xml-->
 	
-	<property name="service.rm1.name" value="rm"/>
+	<property name="service.rm.name" value="rm"/>
+	<property name="service.rm.url_pattern" value="rm"/>
+	
 	<property name="service.rm1.host" value="localhost"/>
     <property name="service.rm1.port" value="8088"/>
-    <property name="service.rm1.url_pattern" value="rm"/>
     
 	<property name="service.rm2.host" value="localhost"/>
     <property name="service.rm2.port" value="8089"/>
@@ -58,7 +63,7 @@
                 keep="true"
                 destdir="${basedir}/build/classes"
                 package="server"
-                wsdl="http://${service.rm1.host}:${service.rm1.port}/${service.rm1.name}/${service.rm1.url_pattern}?wsdl">
+                wsdl="http://${service.rm1.host}:${service.rm1.port}/${service.rm.name}/${service.rm.url_pattern}?wsdl">
         </wsimport>
     </target>
 
@@ -128,6 +133,8 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
+        	<arg value="${services}"/>
+        	<arg value="${middleware.ip}"/>
             <arg value="${service.name}"/>
             <arg value="${service.port}"/>
             <arg value="${basedir}/webapps"/>
@@ -142,7 +149,7 @@
 
     <target name="create-war-rm">
         <war 
-            warfile="${basedir}/build/war/${service.rm1.name}.war" 
+            warfile="${basedir}/build/war/${service.rm.name}.war" 
             webxml="etc/web.xml">
             <webinf dir="${basedir}/etc" includes="sun-jaxws.xml"/>
             <zipfileset
@@ -154,12 +161,12 @@
     </target>
     
     <target name="deploy-war-rm">
-        <delete dir="${basedir}/webapps/${service.rm1.name}" 
+        <delete dir="${basedir}/webapps/${service.rm.name}" 
             includeEmptyDirs="true"/>
-        <mkdir dir="${basedir}/webapps/${service.rm1.name}"/>        
+        <mkdir dir="${basedir}/webapps/${service.rm.name}"/>        
         <unzip 
-            src="${basedir}/build/war/${service.rm1.name}.war"
-            dest="${basedir}/webapps/${service.rm1.name}"/>
+            src="${basedir}/build/war/${service.rm.name}.war"
+            dest="${basedir}/webapps/${service.rm.name}"/>
     </target>
     
     <target name="start-tomcat-rm1" depends="build-main">
@@ -170,7 +177,9 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm1.name}"/>
+        	<arg value="${services}"/>
+        	<arg value="${middleware.ip}"/>
+            <arg value="${service.rm.name}"/>
             <arg value="${service.rm1.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
@@ -184,7 +193,9 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm1.name}"/>
+        	<arg value="${services}"/>
+        	<arg value="${middleware.ip}"/>
+            <arg value="${service.rm.name}"/>
             <arg value="${service.rm2.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
@@ -198,7 +209,9 @@
                 <pathelement location="${basedir}/build"/>
             </classpath>
             <jvmarg value="-Djava.security.policy=${basedir}/etc/server.policy"/>
-            <arg value="${service.rm1.name}"/>
+        	<arg value="${services}"/>        	        	
+        	<arg value="${middleware.ip}"/>
+            <arg value="${service.rm.name}"/>
             <arg value="${service.rm3.port}"/>
             <arg value="${basedir}/webapps"/>
         </java>
