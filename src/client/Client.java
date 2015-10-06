@@ -14,9 +14,9 @@ public class Client extends WSClient {
     public static void main(String[] args) {
         try {
         
-            if (args.length != 3) {
+            if (args.length != 4) {
                 System.out.println("Usage: MyClient <service-name> " 
-                        + "<service-host> <service-port>");
+                        + "<service-host> <service-port> <service-type>");
                 System.exit(-1);
             }
             

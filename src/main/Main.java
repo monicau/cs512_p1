@@ -11,9 +11,9 @@ public class Main {
     public static void main(String[] args) 
     throws Exception {
     
-        if (args.length != 5 && args.length != 11) {
+        if (args.length != 6 && args.length != 12) {
             System.out.println(
-                "Usage: java Main <use_services> <middleware ip> <service-name> <service-port> <deploy-dir> [<rm1-host> <rm1-port> <rm2-host> <rm2-port> <rm3-host> <rm3-port>]");
+                "Usage: java Main <use_services> <middleware ip> <service-name> <service-port> <deploy-dir> [<rm1-host> <rm1-port> <rm2-host> <rm2-port> <rm3-host> <rm3-port>] <service-type>");
             System.exit(-1);
         }
         
@@ -21,11 +21,22 @@ public class Main {
         String middleware_ip = args[1];
         try(PrintWriter writer = new PrintWriter("config.txt", "UTF-8")){
         	writer.println(use_services+" "+middleware_ip);
+        	writer.close();
         }
     
         String serviceName = args[2];
         int port = Integer.parseInt(args[3]);
         String deployDir = args[4];
+        String serviceType;
+        System.out.println("ARGS[5] = " + args[5]);
+        if (args.length==6) {
+        	serviceType = args[5];
+        } else {
+        	serviceType = args[11];
+        }
+        PrintWriter writer = new PrintWriter("serviceType.txt", "UTF-8");
+        writer.println(serviceType);
+        writer.close();
         
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(port);
@@ -50,7 +61,7 @@ public class Main {
 	        String rmHost3 = args[9];
 	        int rmPort3 = Integer.parseInt(args[10]);
 	        
-	        PrintWriter writer = new PrintWriter("rm.txt", "UTF-8");
+	        writer = new PrintWriter("rm.txt", "UTF-8");
 	        writer.println(rmHost1);
 	        writer.println(rmPort1);
 	        writer.println(rmHost2);

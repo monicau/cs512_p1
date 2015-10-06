@@ -6,6 +6,9 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,23 +25,42 @@ import javax.jws.WebService;
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class ResourceManagerImpl implements server.ws.ResourceManager {
+	boolean useWebService;
 	
 	AtomicReference<Messenger> messenger_ref = new AtomicReference<>();
 	
 	public ResourceManagerImpl() {
-		new Thread(()->{
+		//Determine if we are using web services or tcp
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
 			try {
-				getPort(port->{
-					try {
-						messenger_ref.set(new Messenger(port));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				});
-			} catch (Exception e) {
-				e.printStackTrace();
+				String line = reader.readLine();
+				if (line.equals("ws")) {
+					useWebService = true;
+				} else {
+					useWebService = false;
+				}
+			} catch (IOException e) {
+				Trace.info("ERROR: IOException, cannot read serviceType.txt");
 			}
-		}).start();
+		} catch (FileNotFoundException e) {
+			Trace.info("ERROR: Cannot find serviceType.txt");
+		}
+		if (!useWebService) {
+			new Thread(()->{
+				try {
+					getPort(port->{
+						try {
+							messenger_ref.set(new Messenger(port));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}).start();
+		}
 	}
 	
 	void getPort(Consumer<Integer> onGetPort) throws InterruptedException{

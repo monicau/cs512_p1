@@ -40,7 +40,7 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManager proxyCar;
 	ResourceManager proxyRoom;
 	ResourceManagerImplService service;
-	
+	boolean useWebService;
 	
 	int next_port = 8098;
 	Map<Integer, Socket> resourceManagers = new ConcurrentHashMap<>();
@@ -48,80 +48,100 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	Map<Integer, InputStream> rmIS = new ConcurrentHashMap<>();
 public MiddlewareImpl(){
 	System.out.println("Starting middleware");
-	String flightServiceHost = null;
-	Integer flightServicePort = null;
-	String carServiceHost = null;
-	Integer carServicePort = null;
-	String roomServiceHost = null;
-	Integer roomServicePort = null;
+	//Determine if we are using web services or tcp
 	try {
-		BufferedReader reader = new BufferedReader(new FileReader(new File("rm.txt")));
-		String[] line = new String[6];
+		BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
 		try {
-			for (int i=0; i<6; i++) {
-				line[i] = reader.readLine();
-				Trace.info("Read: " + line[i]);
-			}
-			flightServiceHost = line[0];
-			flightServicePort = Integer.parseInt(line[1]);
-			carServiceHost = line[2];
-			carServicePort = Integer.parseInt(line[3]);
-			roomServiceHost = line[4];
-			roomServicePort = Integer.parseInt(line[5]);
-			try {
-		        URL wsdlLocation = new URL("http", flightServiceHost, flightServicePort, "/" + "rm" + "/rm?wsdl");
-		        service = new ResourceManagerImplService(wsdlLocation);
-		        proxyFlight = service.getResourceManagerImplPort();
-		        
-		        wsdlLocation = new URL("http", carServiceHost, carServicePort, "/" + "rm" + "/rm?wsdl");
-		        service = new ResourceManagerImplService(wsdlLocation);
-		        proxyCar= service.getResourceManagerImplPort();
-		        
-		        wsdlLocation = new URL("http", roomServiceHost, roomServicePort, "/" + "rm" + "/rm?wsdl");
-		        service = new ResourceManagerImplService(wsdlLocation);
-		        proxyRoom= service.getResourceManagerImplPort();
-			} catch (MalformedURLException e) {
-				Trace.info("ERROR!! Malformed url.");
+			String line = reader.readLine();
+			if (line.equals("ws")) {
+				useWebService = true;
+			} else {
+				useWebService = false;
 			}
 		} catch (IOException e) {
-			Trace.info("ERROR: Reading line failed! IOException.");
+			Trace.info("ERROR: IOException, cannot read serviceType.txt");
 		}
 	} catch (FileNotFoundException e) {
-		Trace.info("ERROR: File not found!");
+		Trace.info("ERROR: Cannot find serviceType.txt");
 	}
-	
-	// We are not using services for this part so we use sockets
-	
-	try{
-		Messenger messenger = new Messenger(9090);
-		messenger.onMessage = (message, socket) -> {
-			System.out.println("Received a message");
-			try{
-				if(message.equals("[port?]")){
-					InetAddress inetAddress = socket.getInetAddress();
-					int foreignPort = socket.getPort();
-					System.out.println("Received port request");
-					int port = next_port++;
-					resourceManagers.put(port, socket);
-					rmOOS.put(port, socket.getOutputStream());
-					rmIS.put(port, socket.getInputStream());
-					
-					PrintWriter writer = new PrintWriter(rmOOS.get(port), true);
-					System.out.println("Giving out port "+port+" to "+inetAddress+":"+foreignPort);
-					writer.println(port+"");
+	if (useWebService) {
+		//Create proxies
+		String flightServiceHost = null;
+		Integer flightServicePort = null;
+		String carServiceHost = null;
+		Integer carServicePort = null;
+		String roomServiceHost = null;
+		Integer roomServicePort = null;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File("rm.txt")));
+			String[] line = new String[6];
+			try {
+				for (int i=0; i<6; i++) {
+					line[i] = reader.readLine();
+					Trace.info("Read: " + line[i]);
 				}
+				flightServiceHost = line[0];
+				flightServicePort = Integer.parseInt(line[1]);
+				carServiceHost = line[2];
+				carServicePort = Integer.parseInt(line[3]);
+				roomServiceHost = line[4];
+				roomServicePort = Integer.parseInt(line[5]);
+				try {
+			        URL wsdlLocation = new URL("http", flightServiceHost, flightServicePort, "/" + "rm" + "/rm?wsdl");
+			        service = new ResourceManagerImplService(wsdlLocation);
+			        proxyFlight = service.getResourceManagerImplPort();
+			        
+			        wsdlLocation = new URL("http", carServiceHost, carServicePort, "/" + "rm" + "/rm?wsdl");
+			        service = new ResourceManagerImplService(wsdlLocation);
+			        proxyCar= service.getResourceManagerImplPort();
+			        
+			        wsdlLocation = new URL("http", roomServiceHost, roomServicePort, "/" + "rm" + "/rm?wsdl");
+			        service = new ResourceManagerImplService(wsdlLocation);
+			        proxyRoom= service.getResourceManagerImplPort();
+				} catch (MalformedURLException e) {
+					Trace.info("ERROR!! Malformed url.");
+				}
+			} catch (IOException e) {
+				Trace.info("ERROR: Reading line failed! IOException.");
 			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		};
-		messenger.start();
-	}
-	catch(IOException exception){
-		throw new IllegalStateException("The port 9090 is in use. Please kill that process.");
-	}
-	catch(Exception e){
-		e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			Trace.info("ERROR: File not found!");
+		}
+		
+	
+	} else {
+		// We are not using services for this part so we use sockets
+		try{
+			Messenger messenger = new Messenger(9090);
+			messenger.onMessage = (message, socket) -> {
+				System.out.println("Received a message");
+				try{
+					if(message.equals("[port?]")){
+						InetAddress inetAddress = socket.getInetAddress();
+						int foreignPort = socket.getPort();
+						System.out.println("Received port request");
+						int port = next_port++;
+						resourceManagers.put(port, socket);
+						rmOOS.put(port, socket.getOutputStream());
+						rmIS.put(port, socket.getInputStream());
+						
+						PrintWriter writer = new PrintWriter(rmOOS.get(port), true);
+						System.out.println("Giving out port "+port+" to "+inetAddress+":"+foreignPort);
+						writer.println(port+"");
+					}
+				}
+				catch(Exception e){
+					e.printStackTrace();
+				}
+			};
+			messenger.start();
+		}
+		catch(IOException exception){
+			throw new IllegalStateException("The port 9090 is in use. Please kill that process.");
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 }
