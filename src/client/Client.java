@@ -13,31 +13,18 @@ public class Client extends WSClient {
 
     public static void main(String[] args) {
         try {
-        
-<<<<<<< HEAD
-            if (args.length != 5) {
-                System.out.println("Usage: MyClient <services> <service-name> " 
-                        + "<service-host> <service-port> <middleware.ip>");
-=======
             if (args.length != 4) {
                 System.out.println("Usage: MyClient <service-name> " 
                         + "<service-host> <service-port> <service-type>");
->>>>>>> 4cfbc99e19936c6dcd65e65435d17c169e2c9efa
                 System.exit(-1);
             }
-            if(args[0].equals("yes")){
-            	String serviceName = args[1];
-                String serviceHost = args[2];
-                int servicePort = Integer.parseInt(args[3]);
-                
-                Client client = new Client(serviceName, serviceHost, servicePort);
-                
-                client.run();
-            }
-            else{
-            	String middleware_ip = args[4];
-            }
-            
+	        String serviceName = args[0];
+	        String serviceHost = args[1];
+	        int servicePort = Integer.parseInt(args[2]);
+	
+	        Client client = new Client(serviceName, serviceHost, servicePort);
+	
+	        client.run();
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -108,10 +95,9 @@ public class Client extends WSClient {
                     numSeats = getInt(arguments.elementAt(3));
                     flightPrice = getInt(arguments.elementAt(4));
                     
-                    if (proxy.addFlight(id, flightNumber, numSeats, flightPrice))
+                    if ( (useWebService && proxy.addFlight(id, flightNumber, numSeats, flightPrice)) || tcp.addFlight(id, flightNumber, numSeats, flightPrice))
                         System.out.println("Flight added");
-                    else
-                        System.out.println("Flight could not be added");
+                    else System.out.println("Flight could not be added");
                 }
                 catch(Exception e) {
                     System.out.println("EXCEPTION: ");
@@ -135,7 +121,7 @@ public class Client extends WSClient {
                     numCars = getInt(arguments.elementAt(3));
                     price = getInt(arguments.elementAt(4));
 
-                    if (proxy.addCars(id, location, numCars, price))
+                    if ((useWebService && proxy.addCars(id, location, numCars, price)) || tcp.addCars(id, location, numCars, price))
                         System.out.println("cars added");
                     else
                         System.out.println("cars could not be added");
@@ -162,7 +148,7 @@ public class Client extends WSClient {
                     numRooms = getInt(arguments.elementAt(3));
                     price = getInt(arguments.elementAt(4));
 
-                    if (proxy.addRooms(id, location, numRooms, price))
+                    if ((useWebService && proxy.addRooms(id, location, numRooms, price)) || tcp.addRooms(id, location, numRooms, price))
                         System.out.println("rooms added");
                     else
                         System.out.println("rooms could not be added");
@@ -182,7 +168,8 @@ public class Client extends WSClient {
                 System.out.println("Adding a new Customer using id: " + arguments.elementAt(1));
                 try {
                     id = getInt(arguments.elementAt(1));
-                    int customer = proxy.newCustomer(id);
+                    
+                    int customer = useWebService ? proxy.newCustomer(id) : tcp.newCustomer(id);
                     System.out.println("new customer id: " + customer);
                 }
                 catch(Exception e) {
@@ -203,7 +190,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     flightNumber = getInt(arguments.elementAt(2));
 
-                    if (proxy.deleteFlight(id, flightNumber))
+                    if ((useWebService && proxy.deleteFlight(id, flightNumber)) || tcp.deleteFlight(id, flightNumber))
                         System.out.println("Flight Deleted");
                     else
                         System.out.println("Flight could not be deleted");
@@ -226,7 +213,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    if (proxy.deleteCars(id, location))
+                    if (( useWebService && proxy.deleteCars(id, location)) || tcp.deleteCars(id, location))
                         System.out.println("cars Deleted");
                     else
                         System.out.println("cars could not be deleted");
@@ -249,7 +236,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    if (proxy.deleteRooms(id, location))
+                    if ((useWebService && proxy.deleteRooms(id, location) || tcp.deleteRooms(id, location)))
                         System.out.println("rooms Deleted");
                     else
                         System.out.println("rooms could not be deleted");
@@ -272,7 +259,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     int customer = getInt(arguments.elementAt(2));
 
-                    if (proxy.deleteCustomer(id, customer))
+                    if ((useWebService && proxy.deleteCustomer(id, customer)) || tcp.deleteCustomer(id, customer))
                         System.out.println("Customer Deleted");
                     else
                         System.out.println("Customer could not be deleted");
@@ -294,7 +281,7 @@ public class Client extends WSClient {
                 try {
                     id = getInt(arguments.elementAt(1));
                     flightNumber = getInt(arguments.elementAt(2));
-                    int seats = proxy.queryFlight(id, flightNumber);
+                    int seats = useWebService ? proxy.queryFlight(id, flightNumber) : tcp.queryFlight(id, flightNumber);
                     System.out.println("Number of seats available: " + seats);
                 }
                 catch(Exception e) {
@@ -315,7 +302,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    numCars = proxy.queryCars(id, location);
+                    numCars = useWebService ? proxy.queryCars(id, location): tcp.queryCars(id, location);
                     System.out.println("number of cars at this location: " + numCars);
                 }
                 catch(Exception e) {
@@ -336,7 +323,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    numRooms = proxy.queryRooms(id, location);
+                    numRooms = useWebService ? proxy.queryRooms(id, location) : tcp.queryRooms(id, location);
                     System.out.println("number of rooms at this location: " + numRooms);
                 }
                 catch(Exception e) {
@@ -357,7 +344,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     int customer = getInt(arguments.elementAt(2));
 
-                    String bill = proxy.queryCustomerInfo(id, customer);
+                    String bill = useWebService ? proxy.queryCustomerInfo(id, customer) :tcp.queryCustomerInfo(id, customer);
                     System.out.println("Customer info: " + bill);
                 }
                 catch(Exception e) {
@@ -378,7 +365,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     flightNumber = getInt(arguments.elementAt(2));
 
-                    price = proxy.queryFlightPrice(id, flightNumber);
+                    price = useWebService ?  proxy.queryFlightPrice(id, flightNumber) : tcp.queryFlightPrice(id, flightNumber);
                     System.out.println("Price of a seat: " + price);
                 }
                 catch(Exception e) {
@@ -399,7 +386,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    price = proxy.queryCarsPrice(id, location);
+                    price = useWebService ? proxy.queryCarsPrice(id, location) : tcp.queryCarsPrice(id, location);
                     System.out.println("Price of a car at this location: " + price);
                 }
                 catch(Exception e) {
@@ -420,7 +407,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     location = getString(arguments.elementAt(2));
 
-                    price = proxy.queryRoomsPrice(id, location);
+                    price = useWebService ? proxy.queryRoomsPrice(id, location) : tcp.queryRoomsPrice(id, location);
                     System.out.println("Price of rooms at this location: " + price);
                 }
                 catch(Exception e) {
@@ -443,7 +430,7 @@ public class Client extends WSClient {
                     int customer = getInt(arguments.elementAt(2));
                     flightNumber = getInt(arguments.elementAt(3));
 
-                    if (proxy.reserveFlight(id, customer, flightNumber))
+                    if ((useWebService && proxy.reserveFlight(id, customer, flightNumber)) || tcp.reserveFlight(id, customer, flightNumber))
                         System.out.println("Flight Reserved");
                     else
                         System.out.println("Flight could not be reserved.");
@@ -468,7 +455,7 @@ public class Client extends WSClient {
                     int customer = getInt(arguments.elementAt(2));
                     location = getString(arguments.elementAt(3));
                     
-                    if (proxy.reserveCar(id, customer, location))
+                    if ((useWebService && proxy.reserveCar(id, customer, location))|| tcp.reserveCar(id, customer, location))
                         System.out.println("car Reserved");
                     else
                         System.out.println("car could not be reserved.");
@@ -493,7 +480,7 @@ public class Client extends WSClient {
                     int customer = getInt(arguments.elementAt(2));
                     location = getString(arguments.elementAt(3));
                     
-                    if (proxy.reserveRoom(id, customer, location))
+                    if ((useWebService && proxy.reserveRoom(id, customer, location))|| tcp.reserveRoom(id, customer, location))
                         System.out.println("room Reserved");
                     else
                         System.out.println("room could not be reserved.");
@@ -527,8 +514,8 @@ public class Client extends WSClient {
                     car = getBoolean(arguments.elementAt(arguments.size()-2));
                     room = getBoolean(arguments.elementAt(arguments.size()-1));
                     
-                    if (proxy.reserveItinerary(id, customer, flightNumbers, 
-                            location, car, room))
+                    if (( useWebService && proxy.reserveItinerary(id, customer, flightNumbers, 
+                            location, car, room)) || tcp.reserveItinerary(id, customer, flightNumbers, location, car, room))
                         System.out.println("Itinerary Reserved");
                     else
                         System.out.println("Itinerary could not be reserved.");
@@ -559,7 +546,7 @@ public class Client extends WSClient {
                     id = getInt(arguments.elementAt(1));
                     int customer = getInt(arguments.elementAt(2));
 
-                    boolean c = proxy.newCustomerId(id, customer);
+                    boolean c = useWebService ? proxy.newCustomerId(id, customer) : tcp.newCustomerId(id, customer);
                     System.out.println("new customer id: " + customer);
                 }
                 catch(Exception e) {

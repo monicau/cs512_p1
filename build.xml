@@ -23,7 +23,7 @@
     <property name="service.rm3.host" value="localhost"/>
     <property name="service.rm3.port" value="8090"/>
     
-    <property name="service.type" value="ws" />
+    <property name="service.type" value="tcp" />
 	
     <path id="jaxws.classpath">
         <pathelement location="${java.home}/../lib/tools.jar"/>
@@ -303,11 +303,9 @@
                 <path refid="jaxws.classpath"/>
                 <pathelement location="${basedir}/build/classes"/>
             </classpath>
-        	<arg value="${services}" />
             <arg value="${service.name}"/>
             <arg value="${service.host}"/>
             <arg value="${service.port}"/>
-        	<arg value="${middleware.ip}"/>
             <arg value="${service.type}"/>
         </java>
     </target>

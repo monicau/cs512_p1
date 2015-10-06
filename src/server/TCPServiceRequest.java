@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.util.Vector;
 import java.util.function.Consumer;
 
-public class TCPServiceRequest {
+public class TCPServiceRequest{
 	private Messenger flightIn;
 	private OutputStream flightOut;
 	private Messenger carIn;
@@ -150,7 +150,7 @@ public class TCPServiceRequest {
 	 * @param location
 	 * @param callback 		Callbacks with the price
 	 */
-	public void getRoomPrice(int id, String location, Consumer<Integer> callback) {
+	public void queryRoomPrice(int id, String location, Consumer<Integer> callback) {
 		roomIn.eventHandlers.put( name -> name.startsWith("roomprice"), 
 				msg  -> callback.accept( Integer.valueOf( msg.substring(msg.indexOf(':') + 1))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {

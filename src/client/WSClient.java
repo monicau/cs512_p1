@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URL;
 import java.net.MalformedURLException;
 
+import server.Messenger;
 import server.Trace;
 import client.ResourceManager;
 
@@ -18,8 +20,7 @@ public class WSClient {
    	MiddlewareImplService service;
     
     ResourceManager proxy;
-//   	Middleware proxy;
-    
+    TCPClient tcp;
     boolean useWebService;
     
     public WSClient(String serviceName, String serviceHost, int servicePort) 
@@ -49,7 +50,12 @@ public class WSClient {
 	        
 	        proxy = service.getMiddlewareImplPort();
     	} else {
-    		//TODO: socket version of client
+    		try{
+    			Socket s = new Socket(serviceHost, 8090);
+        		tcp = new TCPClient(new Messenger(0), s.getOutputStream());
+    		}
+    		catch(Exception e){}
+    		
     	}
     }
 
