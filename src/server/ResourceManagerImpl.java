@@ -35,6 +35,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 			BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
 			try {
 				String line = reader.readLine();
+				reader.close();
 				if (line.equals("ws")) {
 					useWebService = true;
 				} else {

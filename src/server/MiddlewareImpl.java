@@ -42,7 +42,7 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	ResourceManagerImplService service;
 	boolean useWebService;
 	
-	int next_port = 8098;
+	int next_port;
 	Map<Integer, Socket> resourceManagers = new ConcurrentHashMap<>();
 	Map<Integer, OutputStream> rmOOS = new ConcurrentHashMap<>();
 	Map<Integer, InputStream> rmIS = new ConcurrentHashMap<>();
@@ -58,6 +58,7 @@ public MiddlewareImpl(){
 			} else {
 				useWebService = false;
 			}
+			next_port = Integer.parseInt(reader.readLine());
 		} catch (IOException e) {
 			Trace.info("ERROR: IOException, cannot read serviceType.txt");
 		}
