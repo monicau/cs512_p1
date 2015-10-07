@@ -21,6 +21,7 @@ public class Main {
         String middleware_ip = args[1];
         try(PrintWriter writer = new PrintWriter("config.txt", "UTF-8")){
         	writer.println(use_services+" "+middleware_ip);
+        	writer.println(middleware_ip);
         	writer.close();
         }
         String tcpPort = "";

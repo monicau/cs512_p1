@@ -28,7 +28,7 @@ import com.google.gson.Gson;
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class ResourceManagerImpl implements server.ws.ResourceManager {
-	private final String MW_LOCATION = "localhost";
+	private String MW_LOCATION = "localhost";
 
 	boolean useWebService;
 	
@@ -45,6 +45,9 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 					useWebService = true;
 				} else {
 					useWebService = false;
+					reader = new BufferedReader(new FileReader(new File("config.txt")));
+					MW_LOCATION = reader.readLine();
+					MW_LOCATION = reader.readLine();
 				}
 			} catch (IOException e) {
 				Trace.info("ERROR: IOException, cannot read serviceType.txt");
