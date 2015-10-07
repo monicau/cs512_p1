@@ -25,7 +25,6 @@ public class TCPClient extends TCPServiceRequest implements ResourceManager{
 		public void offer(T t){
 			try {
 				element.put(t);
-				System.out.println(t+" is ready to be taken");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

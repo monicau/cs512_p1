@@ -186,24 +186,51 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 								// find method
 								System.out.println("Resolving request "+methodname+" locally in middleware");
 								String paramtypes = message.substring(split1+1, split2);
-								String varsvalues = message.substring(split2+3);
+								String varsvalues = message.substring(split2+1);
 								String[] splittedParams = paramtypes.split(",");
 								Class<?>[] types = new Class<?>[splittedParams.length];
 								for (int i = 0; i < splittedParams.length; i++) {
-									types[i] = Class.forName(splittedParams[i]);
+									String param = splittedParams[i];
+									try {
+										types[i] = param.equals("int")? int.class:
+													param.equals("boolean")? boolean.class:
+													param.equals("String")? String.class:
+													Class.forName(param);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
 								}
 								Method method = this.getClass().getMethod(methodname, types);
 								varsvalues = "["+varsvalues+"]";
 								Object[] vars = new Gson().fromJson(varsvalues, Object[].class);
 								for (int i = 0; i < vars.length; i++) {
-									vars[i] = types[i].cast(vars[i]);
-									System.out.print(vars[i]+" ");
-								}	System.out.println();
+									try{
+										vars[i] = types[i].cast(vars[i]);
+									}
+									catch(Exception e){
+										try{
+											vars[i] = (int)(((Double) vars[i]).doubleValue());
+										}
+										catch(Exception e1){
+											try{
+												vars[i] = (boolean)(((Boolean) vars[i]).booleanValue());
+											}
+											catch(Exception e2){
+												try{
+													vars[i] = (String) vars[i];
+												}
+												catch(Exception e3){
+													vars[i] = new Vector<>((List)vars[i]);
+												}
+											}
+										}
+									}
+								}
 								Object result = method.invoke(this, vars);
 
-								PrintWriter writer = new PrintWriter(outputstream, true);
-								System.out.println("Returning result "+result);
-								writer.println(result);
+								PrintWriter writer = new PrintWriter(outputstream,true);
+								System.out.println("Returning result "+result+" to "+socket.getPort());
+								writer.println(methodname+":"+result);
 							}
 							else{
 								// forward it to rm
@@ -270,8 +297,6 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 		}
 	}
 	protected RMMap m_itemHT = new RMMap<>();
-
-
 
 	// Basic operations on RMItem //
 
@@ -653,13 +678,19 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 
 	// Reserve an itinerary.
 	@Override
-	public boolean reserveItinerary(int id, int customerId, Vector flightNumbers, String location, boolean car, boolean room) {
+	public boolean reserveItinerary(int id, int customerId, Vector	 flightNumbers, String location, boolean car, boolean room) {
 		Trace.info("MW::reserve itinerary");
 		for (Object element: flightNumbers) {
-			String flightNumberString= (String) element;
-			int flightNumber = Integer.parseInt(flightNumberString);
+			int flightNumber;
+			if(useWebService){
+				String flightNumberString= (String) element;
+				flightNumber = Integer.parseInt(flightNumberString);
+			}
+			else{
+				flightNumber = (int)((Double) element).doubleValue();
+			}
 			if (queryFlight(id,flightNumber)<1) {
-				Trace.info("MW::No free seats on flight " + flightNumberString);
+				Trace.info("MW::No free seats on flight " + flightNumber);
 				return false;
 			}
 		}
@@ -674,7 +705,9 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 		//Now try to reserve all the items
 		if (car) {
 			Trace.info("MW::Reserving car at" + location);
-			boolean reserveCarResult = reserveCar(id, customerId, location);
+			boolean reserveCarResult;
+			if(useWebService)
+				reserveCarResult = reserveCar(id, customerId, location);
 			//return false now if reserving car failed
 			if (reserveCarResult == false) return false;
 		}
