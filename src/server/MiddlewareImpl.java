@@ -705,9 +705,10 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 		//Now try to reserve all the items
 		if (car) {
 			Trace.info("MW::Reserving car at" + location);
-			boolean reserveCarResult;
-			if(useWebService)
+			boolean reserveCarResult = false;
+			if(useWebService) {
 				reserveCarResult = reserveCar(id, customerId, location);
+			}
 			//return false now if reserving car failed
 			if (reserveCarResult == false) return false;
 		}
