@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,9 +18,9 @@ import java.util.function.Predicate;
 public class Messenger {
 
 	ConnectionHandler connectionHandler;
-	BiConsumer<String, Socket> onMessage = new BiConsumer<String, Socket>() {
+	TriConsumer<String, Socket, OutputStream> onMessage = new TriConsumer<String, Socket, OutputStream>() {
 		@Override
-		public void accept(String message, Socket address) {
+		public void accept(String message, Socket address, OutputStream os) {
 			System.out.println(address + " sent: "+ message );
 		}
 	};
@@ -29,15 +30,16 @@ public class Messenger {
 	public Messenger(int port) throws IOException {
 		connectionHandler = new ConnectionHandler(port, new Consumer<Socket>() {
 			@Override
-			public void accept(Socket t) {
-				System.out.println("Accepted a new connection on port "+t.getPort());
+			public void accept(Socket socket) {
+				System.out.println("Accepted a new connection on port "+socket.getPort());
 				try{
-					InputStream is = t.getInputStream();
+					InputStream is = socket.getInputStream();
 					BufferedReader br = new BufferedReader(new InputStreamReader(is));
 					AtomicReference<String> in = new AtomicReference<>(br.readLine());
+					OutputStream os = socket.getOutputStream();
 					while(in.get() != null){
 						System.out.println("Received "+in.get());
-						onMessage.accept(in.get(), t);
+						onMessage.accept(in.get(), socket, os);
 						Iterator<Entry<Predicate<String>, Consumer<String>>> iterator = eventHandlers.entrySet().iterator();
 						while(iterator.hasNext()){
 							Entry<Predicate<String>, Consumer<String>> next = iterator.next();
@@ -60,7 +62,7 @@ public class Messenger {
 		this.connectionHandler.start();
 	}
 	
-	public void onMessage(BiConsumer<String, Socket> onMessage){
+	public void onMessage(TriConsumer<String, Socket, OutputStream> onMessage){
 		this.onMessage = onMessage;
 	}
 }

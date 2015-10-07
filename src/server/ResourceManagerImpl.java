@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Vector;
@@ -21,6 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import javax.jws.WebService;
+
+import com.google.gson.Gson;
 
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
@@ -51,7 +54,62 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 				try {
 					getPort(port->{
 						try {
-							messenger_ref.set(new Messenger(port));
+							System.out.println("Making new messenger at port "+port+" for RM");
+							Messenger msger = new Messenger(port);
+							messenger_ref.set(msger); 
+							System.out.println("Made messenger for RM");
+							msger.onMessage = (message, socket, outputstream)->{
+								System.out.println("RM got message: "+message);
+								// Messages have form  method_name(type1,type2,...,typen)var1,var2,...,varn
+								int split1 = message.indexOf('(');
+								int split2 = message.indexOf(')');
+								String methodname = message.substring(0, split1);
+
+								System.out.println("Resolving request "+methodname+" locally in middleware");
+								String paramtypes = message.substring(split1+1, split2);
+								String varsvalues = message.substring(split2+1);
+								String[] splittedParams = paramtypes.split(",");
+								Class<?>[] types = new Class<?>[splittedParams.length];
+								for (int i = 0; i < splittedParams.length; i++) {
+									String param = splittedParams[i];
+									try {
+										types[i] = param.equals("int")? int.class:
+													param.equals("boolean")? boolean.class:
+													param.equals("String")? String.class:
+													Class.forName(param);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+								Method method=null;
+								try {
+									method = this.getClass().getMethod(methodname, types);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								varsvalues = "["+varsvalues+"]";
+								Object[] vars = new Gson().fromJson(varsvalues, Object[].class);
+								for (int i = 0; i < vars.length; i++) {
+									try{
+										vars[i] = types[i].cast(vars[i]);
+									}
+									catch(Exception e){
+										vars[i] = (int)(((Double) vars[i]).doubleValue());
+									}
+									System.out.print(vars[i]+" ");
+								}	System.out.println();
+								Object result=null;
+								try {
+									result = method.invoke(this, vars);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								
+								PrintWriter writer = new PrintWriter(outputstream, true);
+								System.out.println("Returning result "+result);
+								writer.println(result);
+							};
+							msger.start();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

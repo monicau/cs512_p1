@@ -9,12 +9,13 @@ import java.util.function.Consumer;
 public class ConnectionHandler extends Thread{
 	ServerSocket socket;
 	Consumer<Socket> service;
-	int timeout = 30000;
+	int timeout = 300000;
 	
 	public ConnectionHandler(int port, Consumer<Socket> service) throws IOException {
-		System.out.println("Creating new connection handler");
+		
 		this.socket = new ServerSocket(port);
 		this.service = service;
+		System.out.println("Creating new connection handler");
 	}
 
 	public void setTimeout(int timeout){

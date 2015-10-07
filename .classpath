@@ -18,5 +18,6 @@
 	<classpathentry kind="lib" path="lib/tomcat-embed-core.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-embed-jasper.jar"/>
 	<classpathentry kind="lib" path="lib/tomcat-embed-logging-juli.jar"/>
+	<classpathentry kind="lib" path="/home/rudolf/git/cs512_p1/lib/gson-2.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

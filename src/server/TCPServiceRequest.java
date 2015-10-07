@@ -2,19 +2,30 @@ package server;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.function.Consumer;
 
-public class TCPServiceRequest{
-	private Messenger flightIn;
-	private OutputStream flightOut;
-	private Messenger carIn;
-	private OutputStream carOut;
-	private Messenger roomIn;
-	private OutputStream roomOut;
-	private Messenger middlewareIn;
-	private OutputStream middlewareOut;
+import server.ws.ResourceManager;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+public class TCPServiceRequest{
+	protected Messenger flightIn;
+	protected OutputStream flightOut;
+	protected Messenger carIn;
+	protected OutputStream carOut;
+	protected Messenger roomIn;
+	protected OutputStream roomOut;
+	protected Messenger middlewareIn;
+	protected OutputStream middlewareOut;
+
+	public static Gson gg = new Gson();
+	
 	public TCPServiceRequest(Messenger flightIn, OutputStream flightOut, 
 			Messenger carIn, OutputStream carOut, 
 			Messenger roomIn, OutputStream roomOut,
@@ -42,26 +53,44 @@ public class TCPServiceRequest{
 		return raw.substring(raw.indexOf(':') + 1);
 	}
 
-	public void addFlight(int id, int flightNumber, int numSeats, int flightPrice, Consumer<Boolean> callback) {
-		flightIn.eventHandlers.put( name -> name.startsWith("addflight"),
+	
+	public void addFlight(Integer id, Integer flightNumber, Integer numSeats, Integer flightPrice, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		Method[] methods = ResourceManager.class.getMethods();
+		Method m = Arrays.stream(methods)
+							.filter(method->method.getName().equals(methodName))
+							.findAny().get();
+		
+		flightIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(flightOut)) {
-			writer.println("addflight,"+id+","+flightNumber+","+numSeats+","+flightPrice);
+			writer.println( methodName+"("+ Arrays.stream( m.getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+flightNumber+","+numSeats+","+flightPrice);
 		}
 	}
-	public void deleteFlight(int id, int flightNumber, Consumer<Boolean> callback) {
-		flightIn.eventHandlers.put( name -> name.startsWith("deleteflight"),
+	public void deleteFlight(Integer id, Integer flightNumber, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		flightIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(flightOut)) {
-			writer.println("deleteflight,"+id+","+flightNumber);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+flightNumber);
 		}
 	}
 
-	public void queryFlight(int id, int flightNumber, Consumer<Integer> callback) {
-		flightIn.eventHandlers.put( name -> name.startsWith("queryflight"),
+	public void queryFlight(Integer id, Integer flightNumber, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		flightIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Integer.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(flightOut)) {
-			writer.println("queryflight,"+id+","+flightNumber);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+flightNumber);
 		}
 	}
 
@@ -72,35 +101,51 @@ public class TCPServiceRequest{
 	 * @param flightNumber
 	 * @param callback 		Callbacks with the price
 	 */
-	public void queryFlightPrice(int id, int flightNumber, Consumer<Integer> callback) {
-		flightIn.eventHandlers.put( name -> name.startsWith("queryflightprice"), 
+	public void queryFlightPrice(Integer id, Integer flightNumber, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		flightIn.eventHandlers.put( name -> name.startsWith(methodName), 
 				msg  -> callback.accept( Integer.valueOf( parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(flightOut)) {
-			writer.println("queryflightprice,"+id+","+flightNumber);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+flightNumber);
 		}
 	}
 
-	public void addCars(int id, String location, int numCars, int carPrice, Consumer<Boolean> callback) {
-		carIn.eventHandlers.put( name -> name.startsWith("addcars"),
+	public void addCars(Integer id, String location, Integer numCars, Integer carPrice, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		carIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(carOut)) {
-			writer.println("addcars,"+id+","+location+","+numCars+","+carPrice);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location+","+numCars+","+carPrice);
 		}
 	}
 
-	public void deleteCars(int id, String location, Consumer<Boolean> callback) {
-		carIn.eventHandlers.put( name -> name.startsWith("deletecars"),
+	public void deleteCars(Integer id, String location, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		carIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(carOut)) {
-			writer.println("deletecars,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
-	public void queryCars(int id, String location, Consumer<Integer> callback) {
-		carIn.eventHandlers.put( name -> name.startsWith("querycars"),
+	public void queryCars(Integer id, String location, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		carIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Integer.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(carOut)) {
-			writer.println("querycars,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
@@ -111,35 +156,51 @@ public class TCPServiceRequest{
 	 * @param location
 	 * @param callback 		Callbacks with the price
 	 */
-	public void queryCarPrice(int id, String location, Consumer<Integer> callback) {
-		carIn.eventHandlers.put( name -> name.startsWith("carprice"), 
+	public void queryCarPrice(Integer id, String location, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		carIn.eventHandlers.put( name -> name.startsWith(methodName), 
 				msg  -> callback.accept( Integer.valueOf( msg.substring(msg.indexOf(':') + 1))));
 		try(PrintWriter writer = new PrintWriter(carOut)) {
-			writer.println("price,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
-	public void addRooms(int id, String location, int numRooms, int roomPrice, Consumer<Boolean> callback) {
-		roomIn.eventHandlers.put( name -> name.startsWith("addrooms"),
+	public void addRooms(Integer id, String location, Integer numRooms, Integer roomPrice, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		roomIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {
-			writer.println("addrooms,"+id+","+location+","+numRooms+","+roomPrice);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location+","+numRooms+","+roomPrice);
 		}
 	}
 
-	public void deleteRooms(int id, String location, Consumer<Boolean> callback) {
-		roomIn.eventHandlers.put( name -> name.startsWith("deleterooms"),
+	public void deleteRooms(Integer id, String location, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		roomIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {
-			writer.println("deleteroom,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
-	public void queryRooms(int id, String location, Consumer<Integer> callback) {
-		roomIn.eventHandlers.put( name -> name.startsWith("queryrooms"),
+	public void queryRooms(Integer id, String location, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		roomIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Integer.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {
-			writer.println("addrooms,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
@@ -150,76 +211,134 @@ public class TCPServiceRequest{
 	 * @param location
 	 * @param callback 		Callbacks with the price
 	 */
-	public void queryRoomPrice(int id, String location, Consumer<Integer> callback) {
-		roomIn.eventHandlers.put( name -> name.startsWith("roomprice"), 
+	public void queryRoomPrice(Integer id, String location, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		roomIn.eventHandlers.put( name -> name.startsWith(methodName), 
 				msg  -> callback.accept( Integer.valueOf( msg.substring(msg.indexOf(':') + 1))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {
-			writer.println("price,"+id+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+location);
 		}
 	}
 
-	public void newCustomer(int id, Consumer<Integer> callback) {
-		middlewareIn.eventHandlers.put( name -> name.startsWith("newcustomer"),
+	public void newCustomer(Integer id, Consumer<Integer> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		middlewareIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Integer.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(middlewareOut)) {
-			writer.println("newcustomer,"+id);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id);
 		}
 	}
 
-	public void newCustomerId(int id, int customerId, Consumer<Boolean> callback) {
-		middlewareIn.eventHandlers.put( name -> name.startsWith("newcustomerid"),
+	public void newCustomerId(Integer id, Integer customerId, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		middlewareIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(middlewareOut)) {
-			writer.println("newcustomerid,"+id+","+customerId);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId);
 		}
 	}
 
-	public void deleteCustomer(int id, int customerId, Consumer<Boolean> callback) {
-		middlewareIn.eventHandlers.put( name -> name.startsWith("newcustomer"),
-										msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
+	public void deleteCustomer(Integer id, Integer customerId, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		middlewareIn.eventHandlers.put( name -> name.startsWith(methodName),
+				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(middlewareOut)) {
-			writer.println("deletecustomer,"+id+","+customerId);
-		};
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId);
+		}
 	}
 
-	public void queryCustomerInfo(int id, int customerId, Consumer<String> callback) {
-		middlewareIn.eventHandlers.put( name -> name.startsWith("newcustomer"),
+	public void queryCustomerInfo(Integer id, Integer customerId, Consumer<String> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		middlewareIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(parseResult(msg)));
 		try(PrintWriter writer = new PrintWriter(middlewareOut)) {
-			writer.println("querycustomerinfo,"+id+","+customerId);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId);
 		}
 	}
 
-	public void reserveFlight(int id, int customerId, int flightNumber, Consumer<Boolean> callback) {
-		flightIn.eventHandlers.put( name -> name.startsWith("reserveflight"),
+	public void reserveFlight(Integer id, Integer customerId, Integer flightNumber, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		flightIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(flightOut)) {
-			writer.println("reserveflight,"+id+","+customerId+","+flightNumber);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId+","+flightNumber);
+
 		}
 	}
 
-	public void reserveCar(int id, int customerId, String location, Consumer<Boolean> callback) {
-		carIn.eventHandlers.put( name -> name.startsWith("reservecar"),
+	public void reserveCar(Integer id, Integer customerId, String location, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		carIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(carOut)) {
-			writer.println("reservecar,"+id+","+customerId+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId+","+location);
 		}
 	}
 
-	public void reserveRoom(int id, int customerId, String location, Consumer<Boolean> callback) {
-		roomIn.eventHandlers.put( name -> name.startsWith("reserveroom"),
+	public void reserveRoom(Integer id, Integer customerId, String location, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		roomIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(roomOut)) {
-			writer.println("reserveroom,"+id+","+customerId+","+location);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId+","+location);
 		}
 	}
 
-	public void reserveItinerary(int id, int customerId, Vector flightNumbers, String location, boolean car, boolean room, Consumer<Boolean> callback) {
-		middlewareIn.eventHandlers.put( name -> name.startsWith("reserveitinerary"),
+	public void reserveItinerary(Integer id, Integer customerId, Vector flightNumbers, String location, Boolean car, Boolean room, Consumer<Boolean> callback) {
+		String methodName = new Object(){}.getClass().getEnclosingMethod().getName();
+		middlewareIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
 		try(PrintWriter writer = new PrintWriter(middlewareOut)) {
-			writer.println("reserveitinerary,"+id+","+customerId+","+flightNumbers+","+location+","+car+","+room);
+			writer.println( methodName+"("+ Arrays.stream( new Object(){}.getClass().getEnclosingMethod().getParameterTypes())
+					.map(t->t.getCanonicalName())
+					.reduce((x,y)->x+","+y)
+					.orElse("") +")"+id+","+customerId+","+flightNumbers+","+location+","+car+","+room);
 		}
 	}
 
+	public static String testING(String one, int two, float three){
+		return new Object(){}.getClass().getEnclosingMethod().getName();
+	}
+	
+	public static void main(String[] args) {
+		Object[] os = new Object[]{new Integer(1),2,3f,"Hello", true};
+		String json = gg.toJson(os);
+		System.out.println(json);
+		Object[] fromJson = gg.fromJson(json, Object[].class);
+		for (Object object : fromJson) {
+			System.out.println(object);
+		}
+		Parameter[] parameters = Arrays.stream(TCPServiceRequest.class.getMethods()).filter(m->m.getName().equals("testING")).findFirst().get().getParameters();
+		for (Parameter parameter : parameters) {
+			System.out.println(parameter.getType());
+		}
+		System.out.println();
+		Double d = new Double(1.0);
+		double dd = (double) d;
+		System.out.println(int.class.cast(dd));
+	}
 }

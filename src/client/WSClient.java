@@ -51,7 +51,7 @@ public class WSClient {
 	        proxy = service.getMiddlewareImplPort();
     	} else {
     		try{
-    			Socket s = new Socket(serviceHost, 8090);
+    			Socket s = new Socket(serviceHost, 9090);
         		tcp = new TCPClient(new Messenger(0), s.getOutputStream());
     		}
     		catch(Exception e){}
