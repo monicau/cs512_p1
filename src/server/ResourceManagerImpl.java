@@ -478,6 +478,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
         } else {
         	return false;
         }
+    	if (key==null) return false;
     	// Check if the item is available.
         ReservableItem item = (ReservableItem) readData(id, key);
         if (item == null) {
