@@ -4,6 +4,7 @@
 
 	<property name="services" value="no"/>
 	<property name="middleware.ip" value="localhost" />
+	<property name="service.tcp.port" value="8098"/><!-- port number to start giving out to RM's -->
 	
     <!-- visit http://localhost:8080/mw/service to see available services -->
 	<property name="service.name" value="mw"/>
@@ -147,6 +148,7 @@
             <arg value="${service.rm3.host}"/>
             <arg value="${service.rm3.port}"/>
             <arg value="${service.type}"/>
+            <arg value="${service.tcp.port}" />
         </java>
     </target>
 

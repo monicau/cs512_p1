@@ -59,9 +59,34 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 
 	private TCPServiceRequest tcp;
 	
-	public MiddlewareImpl(){
-		System.out.println("Starting middleware");
-		//Determine if we are using web services or tcp
+
+public MiddlewareImpl(){
+	System.out.println("Starting middleware");
+	//Determine if we are using web services or tcp
+	try {
+		BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
+		try {
+			String line = reader.readLine();
+			if (line.equals("ws")) {
+				useWebService = true;
+			} else {
+				useWebService = false;
+			}
+			next_port = Integer.parseInt(reader.readLine());
+		} catch (IOException e) {
+			Trace.info("ERROR: IOException, cannot read serviceType.txt");
+		}
+	} catch (FileNotFoundException e) {
+		Trace.info("ERROR: Cannot find serviceType.txt");
+	}
+	if (useWebService) {
+		//Create proxies
+		String flightServiceHost = null;
+		Integer flightServicePort = null;
+		String carServiceHost = null;
+		Integer carServicePort = null;
+		String roomServiceHost = null;
+		Integer roomServicePort = null;
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
 			try {

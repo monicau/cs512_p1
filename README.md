@@ -24,9 +24,9 @@ Access via: http://HOSTNAME:PORT/rm/rm
 
 will launch middleware and it will use default values to find the resource managers.  By default, middleware's port is 8080 and service type is ws (web service).
 
-```ant server -Dservice.rm1.host=HOSTNAME -Dservice.rm1.port=PORT -Dservice.rm2.host=HOSTNAME -Dservice.rm2.port=PORT -Dservice.rm3.host=HOSTNAME -Dservice.rm3.port=PORT -Dservice.type=ws/tcp```
+```ant server -Dservice.rm1.host=HOSTNAME -Dservice.rm1.port=PORT -Dservice.rm2.host=HOSTNAME -Dservice.rm2.port=PORT -Dservice.rm3.host=HOSTNAME -Dservice.rm3.port=PORT -Dservice.type=ws/tcp -Dservice.tcp.port=PORT```
 
-will launch middleware with specified resource manager hostnames and port numbers.
+will launch middleware with specified resource manager hostnames and port numbers. Dservice.tcp.port is the starting port number that the middleware will assign to the resource managers.  After each port number is given, the middleware increases the port number by 1.  Default starting port is 8098.
 
 Access it via: http://HOSTNAME:PORT/mw/service
 

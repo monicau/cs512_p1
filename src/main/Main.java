@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) 
     throws Exception {
     
-        if (args.length != 6 && args.length != 12) {
+        if (args.length != 6 && args.length != 13) {
             System.out.println(
                 "Usage: java Main <use_services> <middleware ip> <service-name> <service-port> <deploy-dir> [<rm1-host> <rm1-port> <rm2-host> <rm2-port> <rm3-host> <rm3-port>] <service-type>");
             System.exit(-1);
@@ -23,19 +23,21 @@ public class Main {
         	writer.println(use_services+" "+middleware_ip);
         	writer.close();
         }
-    
+        String tcpPort = "";
         String serviceName = args[2];
         int port = Integer.parseInt(args[3]);
         String deployDir = args[4];
         String serviceType;
-        System.out.println("ARGS[5] = " + args[5]);
         if (args.length==6) {
         	serviceType = args[5];
         } else {
         	serviceType = args[11];
+        	tcpPort = args[12];
         }
+        
         PrintWriter writer = new PrintWriter("serviceType.txt", "UTF-8");
         writer.println(serviceType);
+        writer.println(tcpPort);
         writer.close();
         
         Tomcat tomcat = new Tomcat();
