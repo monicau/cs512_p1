@@ -171,6 +171,7 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 						else if(message.indexOf(':') != -1){
 							// This is dealt with else where
 							System.out.println(message);
+							Thread.sleep(1000);
 						}
 						else{		// this is a "api" call
 							// Messages have form  method_name(type1,type2,...,typen)var1,var2,...,varn

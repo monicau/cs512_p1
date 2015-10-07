@@ -61,8 +61,7 @@ public class WSClient {
     		try{
     			s = new Socket(serviceHost, 9090);
         		outputStream = s.getOutputStream();
-				inputStream = s.getInputStream();
-				middlewareIn = new Messenger(s, inputStream, outputStream);
+				middlewareIn = new Messenger(s);
 				tcp = new TCPClient(middlewareIn, outputStream);
     		}
     		catch(Exception e){

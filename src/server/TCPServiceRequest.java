@@ -63,11 +63,16 @@ public class TCPServiceRequest{
 		
 		flightIn.eventHandlers.put( name -> name.startsWith(methodName),
 				msg -> callback.accept(Boolean.valueOf(parseResult(msg))));
-		try(PrintWriter writer = new PrintWriter(flightOut)) {
+		try{
+			PrintWriter writer = new PrintWriter(flightOut);
 			writer.println( methodName+"("+ Arrays.stream( m.getParameterTypes())
 					.map(t->t.getCanonicalName())
 					.reduce((x,y)->x+","+y)
 					.orElse("") +")"+id+","+flightNumber+","+numSeats+","+flightPrice);
+			writer.flush();
+		}
+		catch(Exception e){
+			e.printStackTrace();
 		}
 	}
 	public void deleteFlight(Integer id, Integer flightNumber, Consumer<Boolean> callback) {

@@ -27,29 +27,32 @@ public class Messenger {
 	
 	Map<Predicate<String>, Consumer<String>> eventHandlers = new HashMap<>(); 		// gets event callback once
 	
-	public Messenger(Socket socket, InputStream is, OutputStream os) {
+	public Messenger(Socket socket) {
 		new Thread(()->{
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			AtomicReference<String> in;
 			try {
-				in = new AtomicReference<>(br.readLine());
-				while(in.get() != null){
-					System.out.println("Messenger received "+in.get());
-					
-					Iterator<Entry<Predicate<String>, Consumer<String>>> iterator = eventHandlers.entrySet().iterator();
-					while(iterator.hasNext()){
-						Entry<Predicate<String>, Consumer<String>> next = iterator.next();
-						if(next.getKey().test(in.get())){
-							next.getValue().accept(in.get());
-							iterator.remove();
+				System.out.println("Established connection on port "+socket.getPort());
+				try{
+					InputStream is = socket.getInputStream();
+					BufferedReader br = new BufferedReader(new InputStreamReader(is));
+					AtomicReference<String> in = new AtomicReference<>(br.readLine());
+					OutputStream os = socket.getOutputStream();
+					while(in.get() != null){
+						Iterator<Entry<Predicate<String>, Consumer<String>>> iterator = eventHandlers.entrySet().iterator();
+						while(iterator.hasNext()){
+							Entry<Predicate<String>, Consumer<String>> next = iterator.next();
+							if(next.getKey().test(in.get())){
+								next.getValue().accept(in.get());
+								iterator.remove();
+							}
 						}
+						onMessage.accept(in.get(), socket, os);
+						in.set(br.readLine());
 					}
-					onMessage.accept(in.get(), socket, os);
-					
-					in.set(br.readLine());
+				}
+				catch(IOException e){
+					e.printStackTrace();
 				}
 			} catch (Exception e) {
-				System.err.println("Cannot read incoming message");
 				e.printStackTrace();
 			}
 			

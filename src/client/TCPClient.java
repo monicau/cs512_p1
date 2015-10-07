@@ -23,7 +23,12 @@ public class TCPClient extends TCPServiceRequest implements ResourceManager{
 	class FutureWaiter<T> implements Future<T>{
 		BlockingQueue<T> element = new ArrayBlockingQueue<T>(1);
 		public void offer(T t){
-			element.offer(t);
+			try {
+				element.put(t);
+				System.out.println(t+" is ready to be taken");
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
@@ -58,9 +63,7 @@ public class TCPClient extends TCPServiceRequest implements ResourceManager{
 	public boolean addFlight(int id, int flightNumber, int numSeats,
 			int flightPrice) {
 		FutureWaiter<Boolean> waiter = new FutureWaiter<>();
-		this.addFlight(id, flightNumber, numSeats, flightPrice, v->{
-			waiter.offer(v);
-		});
+		this.addFlight(id, flightNumber, numSeats, flightPrice, v->waiter.offer(v));
 		try {
 			return waiter.get();
 		} catch (InterruptedException | ExecutionException e) {

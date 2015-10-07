@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public class ConnectionHandler extends Thread{
 	ServerSocket socket;
 	Consumer<Socket> service;
-	int timeout = 300000;
+	int timeout = 3000000;
 	
 	public ConnectionHandler(int port, Consumer<Socket> service) throws IOException {
 		this.socket = new ServerSocket(port);
