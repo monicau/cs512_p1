@@ -714,7 +714,7 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 		if (room) {
 			Trace.info("MW::Reserving room at" + location);
 			boolean reserveRoomResult = reserveRoom(id, customerId, location);
-			if (reserveRoomResult == false) {
+			if (reserveRoomResult == false && car) {
 				//Cancel car reservation and return false
 				proxyCar.rmUnreserve(id, Car.getKey(location), 1);
 				return false;
@@ -737,7 +737,13 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 			}
 		}
 		if (reserveFlightSuccess == false) {
-			//Roll back any successful flight reservations
+			//Roll back any successful car, room and flight reservations 
+			if (car) {
+				proxyCar.rmUnreserve(id, Car.getKey(location), 1);
+			}
+			if (room) {
+				proxyRoom.rmUnreserve(id, Room.getKey(location), 1);
+			}
 			for (int i=0; i<reserveFlightResult.length; i++) {
 				if (reserveFlightResult[i]==true) {
 					int flightNum = Integer.parseInt((String) flightNumbers.get(i));
