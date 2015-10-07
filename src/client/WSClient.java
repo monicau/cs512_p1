@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -22,6 +24,14 @@ public class WSClient {
     ResourceManager proxy;
     TCPClient tcp;
     boolean useWebService;
+
+	private Messenger middlewareIn;
+
+	private Socket s;
+
+	private InputStream inputStream;
+
+	private OutputStream outputStream;
     
     public WSClient(String serviceName, String serviceHost, int servicePort) 
     throws MalformedURLException {
@@ -45,16 +55,19 @@ public class WSClient {
     	if (useWebService) {
 	        URL wsdlLocation = new URL("http", serviceHost, servicePort, 
 	                "/" + serviceName + "/service?wsdl");
-	                
 	        service = new MiddlewareImplService(wsdlLocation);
-	        
 	        proxy = service.getMiddlewareImplPort();
     	} else {
     		try{
-    			Socket s = new Socket(serviceHost, 9090);
-        		tcp = new TCPClient(new Messenger(0), s.getOutputStream());
+    			s = new Socket(serviceHost, 9090);
+        		outputStream = s.getOutputStream();
+				inputStream = s.getInputStream();
+				middlewareIn = new Messenger(s, inputStream, outputStream);
+				tcp = new TCPClient(middlewareIn, outputStream);
     		}
-    		catch(Exception e){}
+    		catch(Exception e){
+    			e.printStackTrace();
+    		}
     		
     	}
     }

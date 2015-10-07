@@ -17,16 +17,20 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -51,42 +55,18 @@ public class MiddlewareImpl implements server.ws.ResourceManager {
 	boolean useWebService;
 
 	int next_port = 8098;
-	Map<Integer, Socket> resourceManagers = new ConcurrentHashMap<>();
+	Map<Integer, Socket> resourceManagers = new HashMap<>();
 	Map<Integer, OutputStream> rmOS = new ConcurrentHashMap<>();
 	Map<Integer, InputStream> rmIS = new ConcurrentHashMap<>();
 
-	List<Integer> rmPorts = new CopyOnWriteArrayList<Integer>();
-
+	List<Integer> rmPorts = new CopyOnWriteArrayList<>();
+	List<InetAddress> rmAddresses = new CopyOnWriteArrayList<>();
 	private TCPServiceRequest tcp;
-	
 
-public MiddlewareImpl(){
-	System.out.println("Starting middleware");
-	//Determine if we are using web services or tcp
-	try {
-		BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
-		try {
-			String line = reader.readLine();
-			if (line.equals("ws")) {
-				useWebService = true;
-			} else {
-				useWebService = false;
-			}
-			next_port = Integer.parseInt(reader.readLine());
-		} catch (IOException e) {
-			Trace.info("ERROR: IOException, cannot read serviceType.txt");
-		}
-	} catch (FileNotFoundException e) {
-		Trace.info("ERROR: Cannot find serviceType.txt");
-	}
-	if (useWebService) {
-		//Create proxies
-		String flightServiceHost = null;
-		Integer flightServicePort = null;
-		String carServiceHost = null;
-		Integer carServicePort = null;
-		String roomServiceHost = null;
-		Integer roomServicePort = null;
+	
+	public MiddlewareImpl(){
+		System.out.println("Starting middleware");
+		//Determine if we are using web services or tcp
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File("serviceType.txt")));
 			try {
@@ -96,6 +76,7 @@ public MiddlewareImpl(){
 				} else {
 					useWebService = false;
 				}
+				next_port = Integer.parseInt(reader.readLine());
 			} catch (IOException e) {
 				Trace.info("ERROR: IOException, cannot read serviceType.txt");
 			}
@@ -145,9 +126,8 @@ public MiddlewareImpl(){
 			} catch (FileNotFoundException e) {
 				Trace.info("ERROR: File not found!");
 			}
-
-
-		} else {
+		} 
+		else {
 			// sockets
 			try{
 				Messenger messenger = new Messenger(9090);
@@ -159,24 +139,42 @@ public MiddlewareImpl(){
 							int foreignPort = socket.getPort();
 							System.out.println("Received port request");
 							int port = next_port++;
-							resourceManagers.put(port, socket);
-							rmOS.put(port, socket.getOutputStream());
-							rmIS.put(port, socket.getInputStream());
 
+							rmAddresses.add(inetAddress);
 							rmPorts.add(port);
-							
-							PrintWriter writer = new PrintWriter(rmOS.get(port), true);
+
+							PrintWriter writer = new PrintWriter(outputstream, true);
 							System.out.println("Giving out port "+port+" to "+inetAddress+":"+foreignPort);
 							writer.println(port+"");
 							
 							if(rmPorts.size() == 4){
 								System.out.println("Constructed the TCP service");
+								
+								for (int i = 0; i < rmPorts.size(); i++) {
+									Integer p = rmPorts.get(i);
+									Socket s; 
+									try{
+										s = new Socket(rmAddresses.get(i), p);
+									}
+									catch(Exception e){
+										Thread.sleep(50);
+										s = new Socket(rmAddresses.get(i),p);
+									}
+									resourceManagers.put(p, s);
+									rmOS.put(p, s.getOutputStream());
+									rmIS.put(p, s.getInputStream());
+								}
 								tcp = new TCPServiceRequest(messenger, rmOS.get(rmPorts.get(0)), messenger, rmOS.get(rmPorts.get(1)), messenger, rmOS.get(rmPorts.get(2)), messenger, rmOS.get(rmPorts.get(3)));
+								
 							}
+						}
+						else if(message.indexOf(':') != -1){
+							// This is dealt with else where
+							System.out.println(message);
 						}
 						else{		// this is a "api" call
 							// Messages have form  method_name(type1,type2,...,typen)var1,var2,...,varn
-							
+							System.out.println("Parsing message "+message);
 							int split1 = message.indexOf('(');
 							int split2 = message.indexOf(')');
 							String methodname = message.substring(0, split1);
@@ -201,7 +199,7 @@ public MiddlewareImpl(){
 									System.out.print(vars[i]+" ");
 								}	System.out.println();
 								Object result = method.invoke(this, vars);
-								
+
 								PrintWriter writer = new PrintWriter(outputstream, true);
 								System.out.println("Returning result "+result);
 								writer.println(result);
@@ -210,28 +208,46 @@ public MiddlewareImpl(){
 								// forward it to rm
 								System.out.println("Forwarding request "+methodname+" to RM");
 								Integer port = -1;
+								
 								if(methodname_lower.contains("flight")){
 									port = rmPorts.get(0);
 									System.out.println("Preparing for flight");
+									messenger.eventHandlers.put( name -> name.contains(methodname),
+											msg -> { // relay back to client
+												PrintWriter writer = new PrintWriter(outputstream, true);
+												System.out.println("Relaying "+msg+" to "+socket.getPort());
+												writer.println(msg);
+											});
 								}
 								else if (methodname_lower.contains("car")){
 									port = rmPorts.get(1);
 									System.out.println("Preparing for car");
+									messenger.eventHandlers.put( name -> name.contains(methodname),
+											msg -> { // relay back to client
+												PrintWriter writer = new PrintWriter(outputstream, true);
+												System.out.println("Relaying "+msg+" to "+socket.getPort());
+												writer.println(msg);
+											});
 								}
 								else if (methodname_lower.contains("room")){
 									port = rmPorts.get(2);
 									System.out.println("Preparing for room");
+									messenger.eventHandlers.put( name -> name.contains(methodname),
+											msg -> { // relay back to client
+												PrintWriter writer = new PrintWriter(outputstream, true);
+												System.out.println("Relaying "+msg+" to "+socket.getPort());
+												writer.println(msg);
+											});
 								}
 								else{
 									System.out.println("The method "+methodname+" is not recognized");
 								}
+								System.out.println(messenger.eventHandlers);
+								
+								System.out.println(">>>Event handler ready");
+								
 								OutputStream os = rmOS.get(port);
-								tcp.flightIn.eventHandlers.put( name -> name.startsWith(methodname),
-										msg -> { // relay back to client
-											PrintWriter writer = new PrintWriter(outputstream, true);
-											writer.println("Relaying message :"+msg);
-											writer.println(msg);
-										});
+								
 								PrintWriter writer = new PrintWriter(os, true);
 								writer.println(message);
 								System.out.println("Sent request "+methodname+" to rm at port "+port);
@@ -251,10 +267,9 @@ public MiddlewareImpl(){
 				e.printStackTrace();
 			}
 		}
-
 	}
 	protected RMMap m_itemHT = new RMMap<>();
-	
+
 
 
 	// Basic operations on RMItem //

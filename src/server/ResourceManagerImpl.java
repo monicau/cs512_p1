@@ -28,6 +28,8 @@ import com.google.gson.Gson;
 
 @WebService(endpointInterface = "server.ws.ResourceManager")
 public class ResourceManagerImpl implements server.ws.ResourceManager {
+	private final String MW_LOCATION = "localhost";
+
 	boolean useWebService;
 	
 	AtomicReference<Messenger> messenger_ref = new AtomicReference<>();
@@ -105,10 +107,15 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
-								
-								PrintWriter writer = new PrintWriter(outputstream, true);
-								System.out.println("Returning result "+result);
-								writer.println(result);
+								try (Socket toMW = new Socket(MW_LOCATION, 9090)){
+									OutputStream os = toMW.getOutputStream();
+									PrintWriter writer = new PrintWriter(os, true);
+									String response = methodname+":"+result;
+									System.out.println("Returning result "+response);
+									writer.println(response);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
 							};
 							msger.start();
 						} catch (Exception e) {
@@ -124,7 +131,7 @@ public class ResourceManagerImpl implements server.ws.ResourceManager {
 	
 	void getPort(Consumer<Integer> onGetPort) throws InterruptedException{
 		System.out.println("Trying to get a port");
-		try(Socket socket = new Socket("localhost", 9090)) {
+		try(Socket socket = new Socket(MW_LOCATION, 9090)) {
 			try{
 				OutputStream oos = socket.getOutputStream();
 				PrintWriter writer = new PrintWriter(oos, true);

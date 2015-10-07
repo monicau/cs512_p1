@@ -21,12 +21,42 @@ public class Messenger {
 	TriConsumer<String, Socket, OutputStream> onMessage = new TriConsumer<String, Socket, OutputStream>() {
 		@Override
 		public void accept(String message, Socket address, OutputStream os) {
-			System.out.println(address + " sent: "+ message );
+			System.out.println("Received from "+address+" : "+ message );
 		}
 	};
 	
 	Map<Predicate<String>, Consumer<String>> eventHandlers = new HashMap<>(); 		// gets event callback once
 	
+	public Messenger(Socket socket, InputStream is, OutputStream os) {
+		new Thread(()->{
+			BufferedReader br = new BufferedReader(new InputStreamReader(is));
+			AtomicReference<String> in;
+			try {
+				in = new AtomicReference<>(br.readLine());
+				while(in.get() != null){
+					System.out.println("Messenger received "+in.get());
+					
+					Iterator<Entry<Predicate<String>, Consumer<String>>> iterator = eventHandlers.entrySet().iterator();
+					while(iterator.hasNext()){
+						Entry<Predicate<String>, Consumer<String>> next = iterator.next();
+						if(next.getKey().test(in.get())){
+							next.getValue().accept(in.get());
+							iterator.remove();
+						}
+					}
+					onMessage.accept(in.get(), socket, os);
+					
+					in.set(br.readLine());
+				}
+			} catch (Exception e) {
+				System.err.println("Cannot read incoming message");
+				e.printStackTrace();
+			}
+			
+		}).start();
+	}
+	
+	// mw messenger
 	public Messenger(int port) throws IOException {
 		connectionHandler = new ConnectionHandler(port, new Consumer<Socket>() {
 			@Override
@@ -38,16 +68,21 @@ public class Messenger {
 					AtomicReference<String> in = new AtomicReference<>(br.readLine());
 					OutputStream os = socket.getOutputStream();
 					while(in.get() != null){
-						System.out.println("Received "+in.get());
-						onMessage.accept(in.get(), socket, os);
+						System.out.println("Messenger received "+in.get());
+						
 						Iterator<Entry<Predicate<String>, Consumer<String>>> iterator = eventHandlers.entrySet().iterator();
+						System.out.println("Going through eventhandlers");
 						while(iterator.hasNext()){
 							Entry<Predicate<String>, Consumer<String>> next = iterator.next();
+							System.out.println("Checking "+next);
 							if(next.getKey().test(in.get())){
+								System.out.println("using "+next+" on "+in.get());
 								next.getValue().accept(in.get());
 								iterator.remove();
 							}
 						}
+						System.out.println("end going through");
+						onMessage.accept(in.get(), socket, os);
 						in.set(br.readLine());
 					}
 				}

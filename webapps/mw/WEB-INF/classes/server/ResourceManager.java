@@ -375,6 +375,36 @@ public interface ResourceManager {
 
     /**
      * 
+     * @param arg3
+     * @param arg2
+     * @param arg5
+     * @param arg4
+     * @param arg1
+     * @param arg0
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "reserveItinerary", targetNamespace = "http://ws.server/", className = "server.ReserveItinerary")
+    @ResponseWrapper(localName = "reserveItineraryResponse", targetNamespace = "http://ws.server/", className = "server.ReserveItineraryResponse")
+    @Action(input = "http://ws.server/ResourceManager/reserveItineraryRequest", output = "http://ws.server/ResourceManager/reserveItineraryResponse")
+    public boolean reserveItinerary(
+        @WebParam(name = "arg0", targetNamespace = "")
+        int arg0,
+        @WebParam(name = "arg1", targetNamespace = "")
+        int arg1,
+        @WebParam(name = "arg2", targetNamespace = "")
+        List<Object> arg2,
+        @WebParam(name = "arg3", targetNamespace = "")
+        String arg3,
+        @WebParam(name = "arg4", targetNamespace = "")
+        boolean arg4,
+        @WebParam(name = "arg5", targetNamespace = "")
+        boolean arg5);
+
+    /**
+     * 
      * @param arg2
      * @param arg1
      * @param arg0
@@ -417,54 +447,6 @@ public interface ResourceManager {
 
     /**
      * 
-     * @param arg3
-     * @param arg2
-     * @param arg5
-     * @param arg4
-     * @param arg1
-     * @param arg0
-     * @return
-     *     returns boolean
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "reserveItinerary", targetNamespace = "http://ws.server/", className = "server.ReserveItinerary")
-    @ResponseWrapper(localName = "reserveItineraryResponse", targetNamespace = "http://ws.server/", className = "server.ReserveItineraryResponse")
-    @Action(input = "http://ws.server/ResourceManager/reserveItineraryRequest", output = "http://ws.server/ResourceManager/reserveItineraryResponse")
-    public boolean reserveItinerary(
-        @WebParam(name = "arg0", targetNamespace = "")
-        int arg0,
-        @WebParam(name = "arg1", targetNamespace = "")
-        int arg1,
-        @WebParam(name = "arg2", targetNamespace = "")
-        List<Object> arg2,
-        @WebParam(name = "arg3", targetNamespace = "")
-        String arg3,
-        @WebParam(name = "arg4", targetNamespace = "")
-        boolean arg4,
-        @WebParam(name = "arg5", targetNamespace = "")
-        boolean arg5);
-
-    /**
-     * 
-     * @param arg1
-     * @param arg0
-     * @return
-     *     returns int
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "getPrice", targetNamespace = "http://ws.server/", className = "server.GetPrice")
-    @ResponseWrapper(localName = "getPriceResponse", targetNamespace = "http://ws.server/", className = "server.GetPriceResponse")
-    @Action(input = "http://ws.server/ResourceManager/getPriceRequest", output = "http://ws.server/ResourceManager/getPriceResponse")
-    public int getPrice(
-        @WebParam(name = "arg0", targetNamespace = "")
-        int arg0,
-        @WebParam(name = "arg1", targetNamespace = "")
-        String arg1);
-
-    /**
-     * 
      * @param arg2
      * @param arg1
      * @param arg0
@@ -483,5 +465,23 @@ public interface ResourceManager {
         int arg1,
         @WebParam(name = "arg2", targetNamespace = "")
         int arg2);
+
+    /**
+     * 
+     * @param arg1
+     * @param arg0
+     * @return
+     *     returns int
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "getPrice", targetNamespace = "http://ws.server/", className = "server.GetPrice")
+    @ResponseWrapper(localName = "getPriceResponse", targetNamespace = "http://ws.server/", className = "server.GetPriceResponse")
+    @Action(input = "http://ws.server/ResourceManager/getPriceRequest", output = "http://ws.server/ResourceManager/getPriceResponse")
+    public int getPrice(
+        @WebParam(name = "arg0", targetNamespace = "")
+        int arg0,
+        @WebParam(name = "arg1", targetNamespace = "")
+        String arg1);
 
 }

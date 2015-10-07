@@ -12,7 +12,6 @@ public class ConnectionHandler extends Thread{
 	int timeout = 300000;
 	
 	public ConnectionHandler(int port, Consumer<Socket> service) throws IOException {
-		
 		this.socket = new ServerSocket(port);
 		this.service = service;
 		System.out.println("Creating new connection handler");

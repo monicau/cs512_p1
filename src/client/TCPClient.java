@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 import server.Messenger;
 import server.TCPServiceRequest;
@@ -59,7 +58,9 @@ public class TCPClient extends TCPServiceRequest implements ResourceManager{
 	public boolean addFlight(int id, int flightNumber, int numSeats,
 			int flightPrice) {
 		FutureWaiter<Boolean> waiter = new FutureWaiter<>();
-		this.addFlight(id, flightNumber, numSeats, flightPrice, v->waiter.offer(v));
+		this.addFlight(id, flightNumber, numSeats, flightPrice, v->{
+			waiter.offer(v);
+		});
 		try {
 			return waiter.get();
 		} catch (InterruptedException | ExecutionException e) {
